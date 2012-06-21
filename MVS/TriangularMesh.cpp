@@ -8309,12 +8309,12 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 	MyMesh T_Mesh = this->m_ObjTriMesh; OpenMesh::Vec3f CurV; OpenMesh::IO::Options write_options;
 	T_Mesh.request_face_normals();		T_Mesh.update_face_normals();
 	T_Mesh.request_vertex_normals();	T_Mesh.update_vertex_normals();
-	bool UseLambert = (m_beta>0)?true:false;	bool UseLaplace = (lapParam>0)?true:false; bool UseFidelity = fidParam>0?true:false;
-	bool UsePointLD = ndp_eta>0?true:false;		bool UseFaceND = ndf_eta>0?true:false;
-	cout << endl << "Start the mesh refinement process: ";	UseFidelity?cout<<"Fid "<<fidParam<<" ":cout<<" ";
-	UseLambert?cout<<"Lam "<<m_beta<<" ":cout<<" ";			UseLaplace?cout<<"Lap "<<lapParam<<" ":cout<<" ";
-	UsePointLD?cout<<"LDP "<<ndp_eta<<" ":cout<<" ";		UseFaceND?cout<<"NDF "<<ndf_eta<<" ":cout<<" "; 
-	UseTVU?cout<<"TVU "<<penParam<<" ":cout<<" ";			UseTVNorm?cout<<"TVNorm "<<penParam<<" ":cout<<" ";cout << endl;
+	bool UsePointLightDiff = (m_beta>0)?true:false;		bool UseLaplace = (lapParam>0)?true:false; bool UsePositionFidelity = fidParam>0?true:false;
+	bool UsePointColorDiff = ndp_eta>0?true:false;		bool UseFaceColorDiff = ndf_eta>0?true:false;
+	cout << endl << "Start the mesh refinement process: ";		UsePositionFidelity?cout<<"Pfid "<<fidParam<<" ":cout<<" ";
+	UsePointLightDiff?cout<<"Ldiff "<<m_beta<<" ":cout<<" ";	UseLaplace?cout<<"Lap "<<lapParam<<" ":cout<<" ";
+	UsePointColorDiff?cout<<"PCdiff "<<ndp_eta<<" ":cout<<" ";	UseFaceColorDiff?cout<<"FCdiff "<<ndf_eta<<" ":cout<<" "; 
+	UseTVU?cout<<"TVU "<<penParam<<" ":cout<<" ";				UseTVNorm?cout<<"TVNorm "<<penParam<<" ":cout<<" ";cout << endl;
 
 	for (MyMesh::VertexIter v_it = T_Mesh.vertices_begin(); v_it != T_Mesh.vertices_end(); ++ v_it) {
 		ux[v_it.handle().idx()] = T_Mesh.point(v_it.handle()).data()[0]; 
@@ -8360,7 +8360,7 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 					minEdgeLength = edge_length;
 				}
 			}
-			avgEdgeLength = avgEdgeLength/T_Mesh.n_edges();    avgEdgeLength = minEdgeLength;
+			avgEdgeLength = avgEdgeLength/T_Mesh.n_edges();    //avgEdgeLength = minEdgeLength;
 
 			int dimension = m_vnum*3 + m_vnum*3;
 			DenseMatrix m_b(dimension, 1);
@@ -8377,29 +8377,29 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 			eOld = gmm::mat_euclidean_norm_sqr(m_f);
 
 			vector<double> t_energy; t_energy.clear(); 
-			CalculateEnergyTerm(m_f, t_energy, UseFidelity, UseLaplace, UseLambert, UsePointLD, UseFaceND, UseTVNorm, UseTVU);
+			CalculateEnergyTerm(m_f, t_energy, UsePositionFidelity, UseLaplace, UsePointLightDiff, UsePointColorDiff, UseFaceColorDiff, UseTVNorm, UseTVU);
 			total_energy = 0.0;
 			for (int k = 0; k < t_energy.size(); ++ k) {
 				total_energy += t_energy[k];
 			}
 			t_energy.push_back(total_energy);			energy_result.push_back(t_energy); 
-			cout << "00: Sum: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[t_energy.size()-1]; 
+			cout << "00: Sum: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[t_energy.size()-1];// << " = " << eOld;
 			int eidx = 0;
-			if (UseFidelity) {
-				cout << " U: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++]; 
+			if (UsePositionFidelity) {
+				cout << " UFID: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++]; 
 			}
 			if (UseLaplace) {
 				cout << " LAP: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 			}
-			if (UseLambert) {
-				cout << " Lam: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
+			if (UsePointLightDiff) {
+				cout << " LDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 				//cout << " = " << 0.5*m_beta*CalculateNEnergy(T_Mesh, vec_n_energy,UseFaceArea);
 			}
-			if (UsePointLD) {
-				cout << " LDP: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
+			if (UsePointColorDiff) {
+				cout << " PCDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 			}
-			if (UseFaceND) {
-				cout << " NDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
+			if (UseFaceColorDiff) {
+				cout << " FCDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 			}
 			if (UseTVNorm) {
 				cout << " TVN: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
@@ -8408,7 +8408,7 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 				cout << " TVU: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 			}
 			sprintf(buffer, "Results\\LMResults\\%sLMResult%d%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f_%d_%d.off", meshname.c_str(), iter_step, 
-				UseFidelity?"Fid":"_", UseLambert?"Beta":"_", UsePointLD?"NDP":"_", UseFaceND?"NDF":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_", fidParam, m_beta, penParam, regParam, ndp_eta, ndf_eta, lapParam, varsigma, outL, 0);
+				UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_", fidParam, m_beta, penParam, regParam, ndp_eta, ndf_eta, lapParam, varsigma, outL, 0);
 			write_options.set(OpenMesh::IO::Options::VertexColor); 
 			if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 				std::cerr << "Cannot write mesh to file " << buffer << std::endl;
@@ -8548,7 +8548,7 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 					eNew = gmm::mat_euclidean_norm_sqr(m_f); 
 
 					vector<double> t_energy; t_energy.clear(); 
-					CalculateEnergyTerm(m_f, t_energy, UseFidelity, UseLaplace, UseLambert, UsePointLD, UseFaceND, UseTVNorm, UseTVU);
+					CalculateEnergyTerm(m_f, t_energy, UsePositionFidelity, UseLaplace, UsePointLightDiff, UsePointColorDiff, UseFaceColorDiff, UseTVNorm, UseTVU);
 					//v_energy = UseFidelity?CalculateVEnergy(T_Mesh,UseFaceArea):0.0;				t_energy.push_back(0.5*fidParam*v_energy);
 					//n_energy = UseGDN?CalculateNEnergy(T_Mesh, vec_n_energy,UseFaceArea):0.0;		t_energy.push_back(0.5*m_beta*n_energy); 
 					//ndp_energy = UsePointND?CalculateNDPEnergy(T_Mesh, varsigma,UseFaceArea):0.0;	t_energy.push_back(0.5*ndp_eta*ndp_energy);
@@ -8579,24 +8579,24 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 					t_energy.push_back(total_energy);			energy_result.push_back(t_energy); 
 					cout << " Sum: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[t_energy.size()-1];// << " = " << eNew; 
 					int eidx = 0;
-					if (UseFidelity) {
-						cout << " U: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
+					if (UsePositionFidelity) {
+						cout << " UFID: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 						//cout << " = " << 0.5*fidParam*CalculateVEnergy(T_Mesh,UseFaceArea); 
 					}					
 					if (UseLaplace) {
 						cout << " LAP: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 						//cout << " = " << 0.5*lapParam*CalculateLaplaceEnergy(T_Mesh,UseFaceArea);
 					}
-					if (UseLambert) {
-						cout << " Lam: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
+					if (UsePointLightDiff) {
+						cout << " LDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 						//cout << " = " << 0.5*m_beta*CalculateNEnergy(T_Mesh, vec_n_energy,UseFaceArea);
 					}
-					if (UsePointLD) {
-						cout << " NDP: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
+					if (UsePointColorDiff) {
+						cout << " PCDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 						//cout << " = " << 0.5*ndp_eta*CalculateNDPEnergy(T_Mesh, varsigma,UseFaceArea);
 					}
-					if (UseFaceND) {
-						cout << " NDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
+					if (UseFaceColorDiff) {
+						cout << " FCDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 						//cout << " = " << 0.5*ndf_eta*CalculateNDFEnergy(T_Mesh, varsigma,UseFaceArea);
 					}
 					if (UseTVNorm) {
@@ -8620,7 +8620,7 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 					}
 					if (iteration%1 == 0) {
 						sprintf(buffer, "Results\\LMResults\\%sLMResult%d%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f_%d_%d.off", meshname.c_str(), iter_step, 
-							UseFidelity?"Fid":"_", UseLambert?"Beta":"_", UsePointLD?"NDP":"_", UseFaceND?"NDF":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_", fidParam, m_beta, penParam, regParam, ndp_eta, ndf_eta, lapParam, varsigma, outL, iteration);
+							UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_", fidParam, m_beta, penParam, regParam, ndp_eta, ndf_eta, lapParam, varsigma, outL, iteration);
 						write_options.set(OpenMesh::IO::Options::VertexColor); 
 						if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 							std::cerr << "Cannot write mesh to file " << buffer << std::endl;
@@ -8650,20 +8650,20 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 				}
 			}
 			sprintf(buffer, "Results\\LMResults\\%sLMResult_Final%d%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f_%d.off", meshname.c_str(), iter_step, 
-				UseFidelity?"Fid":"_", UseLambert?"Beta":"_", UsePointLD?"NDP":"_", UseFaceND?"NDF":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_",
+				UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_",
 				fidParam, m_beta, penParam, regParam, ndp_eta, ndf_eta, lapParam, varsigma, outL);
 			if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 				std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 			}
 			if (!(UseTVU||UseTVNorm)) {
 				sprintf(buffer, "Results\\ALM_%sResult_Final%d%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f.off", meshname.c_str(), iter_step, 
-					UseFidelity?"Fid":"_", UseLambert?"Beta":"_", UsePointLD?"NDP":"_", UseFaceND?"NDF":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_",
+					UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_",
 					fidParam, m_beta, penParam, regParam, ndp_eta, ndf_eta, lapParam, varsigma);
 				if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 					std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 				}
 				sprintf(buffer, "Results\\%sEnergyResult%d%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f.txt", meshname.c_str(), iter_step, 
-					UseFidelity?"Fid":"_", UseLambert?"Beta":"_", UsePointLD?"NDP":"_", UseFaceND?"NDF":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_",
+					UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_",
 					fidParam, m_beta, penParam, regParam, ndp_eta, ndf_eta, lapParam, varsigma);
 				fstream nof(buffer,std::ios::out);
 				if (!nof) {
@@ -8792,14 +8792,14 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 		m_vertices[i].ref_x = ux[i]; m_vertices[i].ref_y = uy[i]; m_vertices[i].ref_z = uz[i];
 	}
 	sprintf(buffer, "Results\\ALM_%sResult_Final%d%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f.off", meshname.c_str(), iter_step, 
-		UseFidelity?"Fid":"_", UseLambert?"Beta":"_", UsePointLD?"NDP":"_", UseFaceND?"NDF":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_",
+		UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_",
 		fidParam, m_beta, penParam, regParam, ndp_eta, ndf_eta, lapParam, varsigma);
 	write_options.set(OpenMesh::IO::Options::VertexColor); 
 	if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 		std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 	}
 	sprintf(buffer, "Results\\%sEnergyResult%d%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f.txt", meshname.c_str(), iter_step, 
-		UseFidelity?"Fid":"_", UseLambert?"Beta":"_", UsePointLD?"NDP":"_", UseFaceND?"NDF":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_", 
+		UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_", 
 		fidParam, m_beta, penParam, regParam, ndp_eta, ndf_eta, lapParam, varsigma);
 	fstream nof(buffer,std::ios::out);
 	if (!nof) {
@@ -8817,10 +8817,10 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 	return;
 }
 
-void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& energy, bool UseFidelity, bool UseLaplace, bool UseLambert, bool UsePointLD, bool UseFaceND, bool UseTVNorm, bool UseTVU)
+void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& energy, bool UsePositionFidelity, bool UseLaplace, bool UsePointLightDiff, bool UsePointColorDiff, bool UseFaceColorDiff, bool UseTVNorm, bool UseTVU)
 {
 	energy.clear(); int Start_id = 0; DenseMatrix temp;
-	if (UseFidelity) {
+	if (UsePositionFidelity) {
 		temp.resize(m_vnum*3,1); gmm::scale(temp, 0.0);
 		for (int i = 0; i < m_vnum*3; ++i) {
 			temp(i,0) = mat_f(Start_id+i,0);
@@ -8836,15 +8836,7 @@ void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& ener
 		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
 		Start_id += m_vnum*3;
 	}
-	if (UseLambert) {
-		temp.resize(m_vnum,1); gmm::scale(temp, 0.0);
-		for (int i = 0; i < m_vnum; ++i) {
-			temp(i,0) = mat_f(Start_id+i,0);
-		}
-		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
-		Start_id += m_vnum;
-	}
-	if (UsePointLD) {
+	if (UsePointLightDiff) {
 		temp.resize(this->m_ObjTriMesh.n_edges()*3,1); gmm::scale(temp, 0.0);
 		for (int i = 0; i < this->m_ObjTriMesh.n_edges()*3; ++i) {
 			temp(i,0) = mat_f(Start_id+i,0);
@@ -8852,13 +8844,21 @@ void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& ener
 		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
 		Start_id += this->m_ObjTriMesh.n_edges()*3;
 	}
-	if (UseFaceND) {
-		temp.resize(this->m_ObjTriMesh.n_edges()*3,1); gmm::scale(temp, 0.0);
-		for (int i = 0; i < this->m_ObjTriMesh.n_edges()*3; ++i) {
+	if (UsePointColorDiff) {
+		temp.resize(this->m_ObjTriMesh.n_edges(),1); gmm::scale(temp, 0.0);
+		for (int i = 0; i < this->m_ObjTriMesh.n_edges(); ++i) {
 			temp(i,0) = mat_f(Start_id+i,0);
 		}
 		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
-		Start_id += this->m_ObjTriMesh.n_edges()*3;
+		Start_id += this->m_ObjTriMesh.n_edges();
+	}
+	if (UseFaceColorDiff) {
+		temp.resize(this->m_ObjTriMesh.n_edges(),1); gmm::scale(temp, 0.0);
+		for (int i = 0; i < this->m_ObjTriMesh.n_edges(); ++i) {
+			temp(i,0) = mat_f(Start_id+i,0);
+		}
+		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
+		Start_id += this->m_ObjTriMesh.n_edges();
 	}
 	if (UseTVNorm) {
 		temp.resize(m_trinum*9,1); gmm::scale(temp, 0.0);
@@ -8878,15 +8878,16 @@ void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& ener
 	}
 }
 
-void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMatrix& mat_J, DenseMatrix& mat_f, double fidParam, double m_beta, double ndp_eta, double ndf_eta, 
-	double varsigma, double penParam, double lapParam, vector<VECTOR3D> &px, vector<VECTOR3D> &py, vector<VECTOR3D> &pz, 
+void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMatrix& mat_J, DenseMatrix& mat_f, double fidParam, double m_beta, 
+	double ndp_eta, double ndf_eta, double varsigma, double penParam, double lapParam, vector<VECTOR3D> &px, vector<VECTOR3D> &py, vector<VECTOR3D> &pz, 
 	vector<VECTOR3D> &lambda_x, vector<VECTOR3D> &lambda_y, vector<VECTOR3D> &lambda_z, bool UseTVU = false, bool UseTVNorm = false, bool UseFaceArea = false)
 {
 	double epsilon = 1.0e-5; UpdateMeshInfo(T_Mesh);
-	bool UseLambert = (m_beta>0)?true:false; bool UseLaplace = (lapParam>0)?true:false; bool UseFidelity = (fidParam>0)?true:false;
-	bool UsePointLD = (ndp_eta>0)?true:false; bool UseFaceND = (ndf_eta>0)?true:false;
+	bool UsePointLightDiff = (m_beta>0)?true:false;		bool UseLaplace = (lapParam>0)?true:false; bool UsePositionFidelity = (fidParam>0)?true:false; // fidelity terms
+	bool UsePointColorDiff = (ndp_eta>0)?true:false;	bool UseFaceColorDiff = (ndf_eta>0)?true:false;
 	// construct the jacobian matrix according to the new model
-	int dimension = UseFidelity*m_vnum*3 + UseLaplace*m_vnum*3 + UseLambert*m_vnum + UsePointLD*T_Mesh.n_edges()*3 + UseFaceND*T_Mesh.n_edges()*3 + UseTVNorm*m_trinum*9 + UseTVU*m_trinum*9;
+	int dimension = UsePositionFidelity*m_vnum*3 + UseLaplace*m_vnum*3 + UsePointLightDiff*T_Mesh.n_edges()*3 + UsePointColorDiff*T_Mesh.n_edges() + 
+		UseFaceColorDiff*T_Mesh.n_edges() + UseTVNorm*m_trinum*9 + UseTVU*m_trinum*9;
 	mat_J.resize(dimension, m_vnum*3+m_vnum*3); mat_f.resize(dimension, 1);
 	gmm::scale(mat_J, 0.0);				gmm::scale(mat_f, 0.0);
 	double fid_scale = sqrt(fidParam*0.5), beta_scale = sqrt(m_beta*0.5),  ndp_scale = sqrt(ndp_eta*0.5), ndf_scale = sqrt(ndf_eta*0.5), pen_scale = sqrt(penParam*0.5);
@@ -8896,7 +8897,7 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 	this->LM_JacobianMatrix_Construction(T_Mesh, gradJ, grad_f, 0);
 
 	int Start_id = 0;
-	if (UseFidelity) {
+	if (UsePositionFidelity) {
 		for (MyMesh::VertexIter v_it = T_Mesh.vertices_begin(); v_it != T_Mesh.vertices_end(); ++ v_it) {
 			int vertex_id = v_it.handle().idx();										double area_scale = UseFaceArea?sqrt(m_vertices[vertex_id].BCDArea):1.0;
 			// the fidelity term, \alpha/2 \|u-f\|^2
@@ -8992,8 +8993,7 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 		Start_id += m_vnum*3;
 	}
 
-	
-	if (UseLambert) {
+	if (UsePointLightDiff) {
 		//gmm::linalg_traits< gmm::wsvector<double> >::const_iterator it, ite; // UseGDN
 		//for (MyMesh::VertexIter v_it = T_Mesh.vertices_begin(); v_it != T_Mesh.vertices_end(); ++ v_it) {
 		//	const int vertex_id = v_it.handle().idx();									double area_scale = UseFaceArea?sqrt(m_vertices[vertex_id].BCDArea):1.0;
@@ -9007,38 +9007,25 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 		//	mat_f(vertex_id*3+2+Start_id, 0) += area_scale*beta_scale*(T_Mesh.normal(v_it).data()[2] - m_vertices[vertex_id].ps_normal_z);
 		//}
 		gmm::linalg_traits< gmm::wsvector<double> >::const_iterator it, ite;
-		// for each point, it light, normal and intensity should satisfy Lambert law
-		for (MyMesh::VertexIter v_it = T_Mesh.vertices_begin(); v_it != T_Mesh.vertices_end(); ++ v_it) {
-			const int vertex_id = v_it.handle().idx();									double area_scale = UseFaceArea?sqrt(m_vertices[vertex_id].BCDArea):1.0;
-			OpenMesh::Vec3f cur_light = OpenMesh::Vec3f(m_vertices[vertex_id].light_x,m_vertices[vertex_id].light_y,m_vertices[vertex_id].light_z);
-			for (int k = 0; k < 3; ++ k) {
-				for (it = vect_const_begin(gmm::mat_const_row(gradJ, vertex_id*3+k)); it != vect_const_end(gmm::mat_const_row(gradJ, vertex_id*3+k)); ++ it) {
-					mat_J(vertex_id+Start_id, it.index()) += area_scale*beta_scale*cur_light[k]*gradJ(vertex_id*3+k, it.index());
-				}
-				mat_J(vertex_id+Start_id, vertex_id+m_vnum*k+m_vnum*3) += area_scale*beta_scale*T_Mesh.normal(v_it).data()[k];
-			}
-			mat_f(vertex_id+Start_id, 0) += area_scale*beta_scale*(OpenMesh::dot(cur_light, T_Mesh.normal(v_it)) - m_vertices[vertex_id].intensity);
-		}
-		Start_id += m_vnum;
-	}	
-	
-	if (UsePointLD) {
-		// the normal difference term, eta*\omega_ij\|n_i - n_j\|^2
-		gmm::linalg_traits< gmm::wsvector<double> >::const_iterator it, ite;
 		T_Mesh.update_face_normals();T_Mesh.update_vertex_normals();
 		//the light of neighbor points should be the same
 		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
 			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();			double area_scale = UseFaceArea?sqrt(m_vertices[iid].BCDArea):1.0;
 			int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx();
 			for (int k = 0; k < 3; ++ k) {
-				mat_J(e_it.handle().idx()*3+k+Start_id, iid+k*m_vnum+m_vnum*3) += area_scale*ndp_scale*1.0;
-				mat_J(e_it.handle().idx()*3+k+Start_id, jid+k*m_vnum+m_vnum*3) -= area_scale*ndp_scale*1.0;
+				mat_J(e_it.handle().idx()*3+k+Start_id, iid+k*m_vnum+m_vnum*3) += area_scale*beta_scale*1.0;
+				mat_J(e_it.handle().idx()*3+k+Start_id, jid+k*m_vnum+m_vnum*3) -= area_scale*beta_scale*1.0;
 			}
-			mat_f(e_it.handle().idx()*3+0+Start_id, 0) += area_scale*ndp_scale*(m_vertices[iid].light_x - m_vertices[jid].light_x);
-			mat_f(e_it.handle().idx()*3+1+Start_id, 0) += area_scale*ndp_scale*(m_vertices[iid].light_y - m_vertices[jid].light_y);
-			mat_f(e_it.handle().idx()*3+2+Start_id, 0) += area_scale*ndp_scale*(m_vertices[iid].light_z - m_vertices[jid].light_z);
+			mat_f(e_it.handle().idx()*3+0+Start_id, 0) += area_scale*beta_scale*(m_vertices[iid].light_x - m_vertices[jid].light_x);
+			mat_f(e_it.handle().idx()*3+1+Start_id, 0) += area_scale*beta_scale*(m_vertices[iid].light_y - m_vertices[jid].light_y);
+			mat_f(e_it.handle().idx()*3+2+Start_id, 0) += area_scale*beta_scale*(m_vertices[iid].light_z - m_vertices[jid].light_z);
 		}
 		Start_id += T_Mesh.n_edges()*3;
+	}	
+	
+	if (UsePointColorDiff) {
+		// the normal difference term, eta*\omega_ij\|n_i - n_j\|^2
+
 //		double max_omega = 1, min_omega = 0;
 //		max_omega = -1; min_omega = 10000;
 //		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
@@ -9083,80 +9070,91 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 //		}
 
 
-		/*// the new model of normal enhancement according to ci-cj
+		// the new model of normal enhancement according to ci-cj
+		gmm::linalg_traits< gmm::wsvector<double> >::const_iterator it, ite;
 		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
 			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();			double area_scale = UseFaceArea?sqrt(m_vertices[iid].BCDArea):1.0;
 			int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx();
 
+			OpenMesh::Vec3f i_light = OpenMesh::Vec3f(m_vertices[iid].light_x,m_vertices[iid].light_y,m_vertices[iid].light_z);
+			OpenMesh::Vec3f j_light = OpenMesh::Vec3f(m_vertices[jid].light_x,m_vertices[jid].light_y,m_vertices[jid].light_z);
 			for (int k = 0; k < 3; k++) {
 				for (it = vect_const_begin(gmm::mat_const_row(gradJ, iid*3+k)); it != vect_const_end(gmm::mat_const_row(gradJ, iid*3+k)); ++ it) {
-					mat_J(e_it.handle().idx()+Start_id, it.index()) += area_scale*ndp_scale*LightInfo[k]*gradJ(iid*3+k, it.index());
+					mat_J(e_it.handle().idx()+Start_id, it.index()) += area_scale*ndp_scale*i_light[k]*gradJ(iid*3+k, it.index());
 				}
+				mat_J(e_it.handle().idx()+Start_id, iid+k*m_vnum+3*m_vnum) += area_scale*ndp_scale*T_Mesh.normal(MyMesh::VertexHandle(iid))[k];
 				for (it = vect_const_begin(gmm::mat_const_row(gradJ, jid*3+k)); it != vect_const_end(gmm::mat_const_row(gradJ, jid*3+k)); ++ it) {
-					mat_J(e_it.handle().idx()+Start_id, it.index()) -= area_scale*ndp_scale*LightInfo[k]*gradJ(jid*3+k, it.index());
+					mat_J(e_it.handle().idx()+Start_id, it.index()) -= area_scale*ndp_scale*j_light[k]*gradJ(jid*3+k, it.index());
 				}
-				mat_J(e_it.handle().idx()+Start_id, 3*m_vnum+k) += area_scale*ndp_scale*(T_Mesh.normal(MyMesh::VertexHandle(iid))[k] - T_Mesh.normal(MyMesh::VertexHandle(jid))[k]); 
+				mat_J(e_it.handle().idx()+Start_id, jid+k*m_vnum+3*m_vnum) += area_scale*ndp_scale*T_Mesh.normal(MyMesh::VertexHandle(jid))[k];
 			}
-			mat_f(e_it.handle().idx()+Start_id, 0) += area_scale*ndp_scale*(OpenMesh::dot(LightInfo, (T_Mesh.normal(MyMesh::VertexHandle(iid)) - T_Mesh.normal(MyMesh::VertexHandle(jid)))) - (m_vertices[iid].intensity - m_vertices[jid].intensity));
+			mat_f(e_it.handle().idx()+Start_id, 0) += area_scale*ndp_scale*
+				( OpenMesh::dot(i_light, T_Mesh.normal(MyMesh::VertexHandle(iid))) - OpenMesh::dot(j_light, T_Mesh.normal(MyMesh::VertexHandle(jid))) - (m_vertices[iid].intensity - m_vertices[jid].intensity) );
 		}
-		Start_id += T_Mesh.n_edges();*/
+		Start_id += T_Mesh.n_edges();
 	}
 
-	if (UseFaceND) {
-		double max_omega = 1, min_omega = 0;
-		max_omega = -1; min_omega = 10000;
-		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
-			MyMesh::FaceHandle fh1 = T_Mesh.face_handle(T_Mesh.halfedge_handle(e_it,0)); 
-			MyMesh::FaceHandle fh2 = T_Mesh.face_handle(T_Mesh.halfedge_handle(e_it,1));
-			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();
-			int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx();
-
-			MyMesh::ConstFaceVertexIter cfv_it = T_Mesh.cfv_iter(fh1);
-			while (cfv_it.handle().idx() == iid || cfv_it.handle().idx() == jid) {
-				++cfv_it;
-			}  int k1id = cfv_it.handle().idx();
-			cfv_it = T_Mesh.cfv_iter(fh2);
-			while (cfv_it.handle().idx() == iid || cfv_it.handle().idx() == jid) {
-				++cfv_it;
-			}  int k2id = cfv_it.handle().idx();
-			double omegaij = std::exp(-pow((m_vertices[k1id].intensity - m_vertices[k2id].intensity), 2.0)/varsigma);
-#ifdef TEST_MESHREFINE
-			OpenMesh::Vec3f psni(m_vertices[k1id].ps_normal_x,m_vertices[k1id].ps_normal_y,m_vertices[k1id].ps_normal_z);
-			OpenMesh::Vec3f psnj(m_vertices[k2id].ps_normal_x,m_vertices[k2id].ps_normal_y,m_vertices[k2id].ps_normal_z);
-			omegaij = std::exp(-(psni-psnj).norm());
-#endif
-			if (omegaij < min_omega) {
-				min_omega = omegaij;
-			}
-			if (omegaij > max_omega) {
-				max_omega = omegaij;
-			}
-		}
+	if (UseFaceColorDiff) {
+//		double max_omega = 1, min_omega = 0;
+//		max_omega = -1; min_omega = 10000;
+//		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
+//			MyMesh::FaceHandle fh1 = T_Mesh.face_handle(T_Mesh.halfedge_handle(e_it,0)); 
+//			MyMesh::FaceHandle fh2 = T_Mesh.face_handle(T_Mesh.halfedge_handle(e_it,1));
+//			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();
+//			int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx();
+//
+//			MyMesh::ConstFaceVertexIter cfv_it = T_Mesh.cfv_iter(fh1);
+//			while (cfv_it.handle().idx() == iid || cfv_it.handle().idx() == jid) {
+//				++cfv_it;
+//			}  int k1id = cfv_it.handle().idx();
+//			cfv_it = T_Mesh.cfv_iter(fh2);
+//			while (cfv_it.handle().idx() == iid || cfv_it.handle().idx() == jid) {
+//				++cfv_it;
+//			}  int k2id = cfv_it.handle().idx();
+//			double omegaij = std::exp(-pow((m_vertices[k1id].intensity - m_vertices[k2id].intensity), 2.0)/varsigma);
+//#ifdef TEST_MESHREFINE
+//			OpenMesh::Vec3f psni(m_vertices[k1id].ps_normal_x,m_vertices[k1id].ps_normal_y,m_vertices[k1id].ps_normal_z);
+//			OpenMesh::Vec3f psnj(m_vertices[k2id].ps_normal_x,m_vertices[k2id].ps_normal_y,m_vertices[k2id].ps_normal_z);
+//			omegaij = std::exp(-(psni-psnj).norm());
+//#endif
+//			if (omegaij < min_omega) {
+//				min_omega = omegaij;
+//			}
+//			if (omegaij > max_omega) {
+//				max_omega = omegaij;
+//			}
+//		}
 		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
 			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();
 			int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx();
 			MyMesh::FaceHandle fh1 = T_Mesh.face_handle(T_Mesh.halfedge_handle(e_it,0)); 
 			MyMesh::FaceHandle fh2 = T_Mesh.face_handle(T_Mesh.halfedge_handle(e_it,1));		double area_scale = UseFaceArea?sqrt(m_trianglesArea[fh1.idx()]):1.0; 
+			OpenMesh::Vec3f i_light = OpenMesh::Vec3f(m_vertices[iid].light_x,m_vertices[iid].light_y,m_vertices[iid].light_z);
+			OpenMesh::Vec3f j_light = OpenMesh::Vec3f(m_vertices[jid].light_x,m_vertices[jid].light_y,m_vertices[jid].light_z);
 
 			MyMesh::ConstFaceVertexIter cfv_it = T_Mesh.cfv_iter(fh1);
 			while (cfv_it.handle().idx() == iid || cfv_it.handle().idx() == jid) {
 				++cfv_it;
 			} int k1id = cfv_it.handle().idx();
+			OpenMesh::Vec3f k1_light = OpenMesh::Vec3f(m_vertices[k1id].light_x,m_vertices[k1id].light_y,m_vertices[k1id].light_z);
 			double Cf1 = (m_vertices[iid].intensity + m_vertices[jid].intensity + m_vertices[k1id].intensity)/3.0;
+			OpenMesh::Vec3f avg_light1 = (i_light+j_light+k1_light)/3.0;
 
 			cfv_it = T_Mesh.cfv_iter(fh2);
 			while (cfv_it.handle().idx() == iid || cfv_it.handle().idx() == jid) {
 				++cfv_it;
 			} int k2id = cfv_it.handle().idx();
+			OpenMesh::Vec3f k2_light = OpenMesh::Vec3f(m_vertices[k2id].light_x,m_vertices[k2id].light_y,m_vertices[k2id].light_z);
 			double Cf2 = (m_vertices[iid].intensity + m_vertices[jid].intensity + m_vertices[k2id].intensity)/3.0;
+			OpenMesh::Vec3f avg_light2 = (i_light+j_light+k2_light)/3.0;
 
-			double omegaij = std::exp(-pow((m_vertices[k1id].intensity - m_vertices[k2id].intensity), 2.0)/varsigma);
-			omegaij = (omegaij-min_omega)/(max_omega-min_omega);
-#ifdef TEST_MESHREFINE
-			OpenMesh::Vec3f psni(m_vertices[k1id].ps_normal_x,m_vertices[k1id].ps_normal_y,m_vertices[k1id].ps_normal_z);
-			OpenMesh::Vec3f psnj(m_vertices[k2id].ps_normal_x,m_vertices[k2id].ps_normal_y,m_vertices[k2id].ps_normal_z);
-			omegaij = (std::exp(-(psni-psnj).norm()) - min_omega)/(max_omega - min_omega);
-#endif
+//			double omegaij = std::exp(-pow((m_vertices[k1id].intensity - m_vertices[k2id].intensity), 2.0)/varsigma);
+//			omegaij = (omegaij-min_omega)/(max_omega-min_omega);
+//#ifdef TEST_MESHREFINE
+//			OpenMesh::Vec3f psni(m_vertices[k1id].ps_normal_x,m_vertices[k1id].ps_normal_y,m_vertices[k1id].ps_normal_z);
+//			OpenMesh::Vec3f psnj(m_vertices[k2id].ps_normal_x,m_vertices[k2id].ps_normal_y,m_vertices[k2id].ps_normal_z);
+//			omegaij = (std::exp(-(psni-psnj).norm()) - min_omega)/(max_omega - min_omega);
+//#endif
 			cfv_it = T_Mesh.cfv_iter(fh1);
 			OpenMesh::Vec3f pa = T_Mesh.point(cfv_it.handle()); int ida = cfv_it.handle().idx(); ++ cfv_it;
 			OpenMesh::Vec3f pb = T_Mesh.point(cfv_it.handle()); int idb = cfv_it.handle().idx(); ++ cfv_it;
@@ -9182,36 +9180,38 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 			n2cy = ( OpenMesh::cross(Cry, Eik) - Nijk*OpenMesh::dot(Cry, OpenMesh::cross(Nijk, Eki)) )/(OpenMesh::cross(pc-pb, pa-pb).norm()+epsilon);
 			n2cz = ( OpenMesh::cross(Crz, Eik) - Nijk*OpenMesh::dot(Crz, OpenMesh::cross(Nijk, Eki)) )/(OpenMesh::cross(pc-pb, pa-pb).norm()+epsilon);
 
-			//for (int k = 0; k < 3; ++ k) {
-			//	mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*0) += area_scale*ndf_scale*LightInfo[k]*n2ax[k];
-			//	mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*1) += area_scale*ndf_scale*LightInfo[k]*n2ay[k];
-			//	mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*2) += area_scale*ndf_scale*LightInfo[k]*n2az[k];
+			for (int k = 0; k < 3; ++ k) {
+				mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*0) += area_scale*ndf_scale*avg_light1[k]*n2ax[k];
+				mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*1) += area_scale*ndf_scale*avg_light1[k]*n2ay[k];
+				mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*2) += area_scale*ndf_scale*avg_light1[k]*n2az[k];
 
-			//	mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*0) += area_scale*ndf_scale*LightInfo[k]*n2bx[k];
-			//	mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*1) += area_scale*ndf_scale*LightInfo[k]*n2by[k];
-			//	mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*2) += area_scale*ndf_scale*LightInfo[k]*n2bz[k];
+				mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*0) += area_scale*ndf_scale*avg_light1[k]*n2bx[k];
+				mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*1) += area_scale*ndf_scale*avg_light1[k]*n2by[k];
+				mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*2) += area_scale*ndf_scale*avg_light1[k]*n2bz[k];
 
-			//	mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*0) += area_scale*ndf_scale*LightInfo[k]*n2cx[k];
-			//	mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*1) += area_scale*ndf_scale*LightInfo[k]*n2cy[k];
-			//	mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*2) += area_scale*ndf_scale*LightInfo[k]*n2cz[k];
+				mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*0) += area_scale*ndf_scale*avg_light1[k]*n2cx[k];
+				mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*1) += area_scale*ndf_scale*avg_light1[k]*n2cy[k];
+				mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*2) += area_scale*ndf_scale*avg_light1[k]*n2cz[k];
 
-			//	mat_J(e_it.handle().idx()+Start_id, k+m_vnum*3) += area_scale*ndf_scale*Nijk[k];
-			//}
-
-			for (int k = 0; k < 3; k++) {
-				mat_J(e_it.handle().idx()*3+k+Start_id, ida+m_vnum*0) += area_scale*ndf_scale*sqrt(omegaij)*n2ax[k];
-				mat_J(e_it.handle().idx()*3+k+Start_id, ida+m_vnum*1) += area_scale*ndf_scale*sqrt(omegaij)*n2ay[k];
-				mat_J(e_it.handle().idx()*3+k+Start_id, ida+m_vnum*2) += area_scale*ndf_scale*sqrt(omegaij)*n2az[k];
-
-				mat_J(e_it.handle().idx()*3+k+Start_id, idb+m_vnum*0) += area_scale*ndf_scale*sqrt(omegaij)*n2bx[k];
-				mat_J(e_it.handle().idx()*3+k+Start_id, idb+m_vnum*1) += area_scale*ndf_scale*sqrt(omegaij)*n2by[k];
-				mat_J(e_it.handle().idx()*3+k+Start_id, idb+m_vnum*2) += area_scale*ndf_scale*sqrt(omegaij)*n2bz[k];
-
-				mat_J(e_it.handle().idx()*3+k+Start_id, idc+m_vnum*0) += area_scale*ndf_scale*sqrt(omegaij)*n2cx[k];
-				mat_J(e_it.handle().idx()*3+k+Start_id, idc+m_vnum*1) += area_scale*ndf_scale*sqrt(omegaij)*n2cy[k];
-				mat_J(e_it.handle().idx()*3+k+Start_id, idc+m_vnum*2) += area_scale*ndf_scale*sqrt(omegaij)*n2cz[k];
-				//mat_f[e_it.handle().idx()*3+k+Start_id, 0] += area_scale*ndf_scale*sqrt(omegaij)*(Nijk.data()[k]);
+				mat_J(e_it.handle().idx()+Start_id, ida+k*m_vnum+m_vnum*3) += area_scale*ndf_scale*Nijk[k]/3;
+				mat_J(e_it.handle().idx()+Start_id, idb+k*m_vnum+m_vnum*3) += area_scale*ndf_scale*Nijk[k]/3;
+				mat_J(e_it.handle().idx()+Start_id, idc+k*m_vnum+m_vnum*3) += area_scale*ndf_scale*Nijk[k]/3;
 			}
+
+			//for (int k = 0; k < 3; k++) {
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, ida+m_vnum*0) += area_scale*ndf_scale*sqrt(omegaij)*n2ax[k];
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, ida+m_vnum*1) += area_scale*ndf_scale*sqrt(omegaij)*n2ay[k];
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, ida+m_vnum*2) += area_scale*ndf_scale*sqrt(omegaij)*n2az[k];
+
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, idb+m_vnum*0) += area_scale*ndf_scale*sqrt(omegaij)*n2bx[k];
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, idb+m_vnum*1) += area_scale*ndf_scale*sqrt(omegaij)*n2by[k];
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, idb+m_vnum*2) += area_scale*ndf_scale*sqrt(omegaij)*n2bz[k];
+
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, idc+m_vnum*0) += area_scale*ndf_scale*sqrt(omegaij)*n2cx[k];
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, idc+m_vnum*1) += area_scale*ndf_scale*sqrt(omegaij)*n2cy[k];
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, idc+m_vnum*2) += area_scale*ndf_scale*sqrt(omegaij)*n2cz[k];
+			//	//mat_f[e_it.handle().idx()*3+k+Start_id, 0] += area_scale*ndf_scale*sqrt(omegaij)*(Nijk.data()[k]);
+			//}
 
 			cfv_it = T_Mesh.cfv_iter(fh2);
 			pa = T_Mesh.point(cfv_it.handle()); ida = cfv_it.handle().idx(); ++ cfv_it;
@@ -9236,45 +9236,47 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 			n2cy = ( OpenMesh::cross(Cry, Eik) - Nijk*OpenMesh::dot(Cry, OpenMesh::cross(Nijk, Eki)) )/(OpenMesh::cross(pc-pb, pa-pb).norm()+epsilon);
 			n2cz = ( OpenMesh::cross(Crz, Eik) - Nijk*OpenMesh::dot(Crz, OpenMesh::cross(Nijk, Eki)) )/(OpenMesh::cross(pc-pb, pa-pb).norm()+epsilon);
 
-			//for (int k = 0; k < 3; ++ k) {
-			//	mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*0) -= area_scale*ndf_scale*LightInfo[k]*n2ax[k];
-			//	mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*1) -= area_scale*ndf_scale*LightInfo[k]*n2ay[k];
-			//	mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*2) -= area_scale*ndf_scale*LightInfo[k]*n2az[k];
+			for (int k = 0; k < 3; ++ k) {
+				mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*0) -= area_scale*ndf_scale*avg_light2[k]*n2ax[k];
+				mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*1) -= area_scale*ndf_scale*avg_light2[k]*n2ay[k];
+				mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*2) -= area_scale*ndf_scale*avg_light2[k]*n2az[k];
 
-			//	mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*0) -= area_scale*ndf_scale*LightInfo[k]*n2bx[k];
-			//	mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*1) -= area_scale*ndf_scale*LightInfo[k]*n2by[k];
-			//	mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*2) -= area_scale*ndf_scale*LightInfo[k]*n2bz[k];
+				mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*0) -= area_scale*ndf_scale*avg_light2[k]*n2bx[k];
+				mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*1) -= area_scale*ndf_scale*avg_light2[k]*n2by[k];
+				mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*2) -= area_scale*ndf_scale*avg_light2[k]*n2bz[k];
 
-			//	mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*0) -= area_scale*ndf_scale*LightInfo[k]*n2cx[k];
-			//	mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*1) -= area_scale*ndf_scale*LightInfo[k]*n2cy[k];
-			//	mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*2) -= area_scale*ndf_scale*LightInfo[k]*n2cz[k];
+				mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*0) -= area_scale*ndf_scale*avg_light2[k]*n2cx[k];
+				mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*1) -= area_scale*ndf_scale*avg_light2[k]*n2cy[k];
+				mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*2) -= area_scale*ndf_scale*avg_light2[k]*n2cz[k];
 
-			//	mat_J(e_it.handle().idx()+Start_id, k+m_vnum*3) -= area_scale*ndf_scale*Nijk[k];
+				mat_J(e_it.handle().idx()+Start_id, ida+k*m_vnum+m_vnum*3) += area_scale*ndf_scale*Nijk[k]/3;
+				mat_J(e_it.handle().idx()+Start_id, idb+k*m_vnum+m_vnum*3) += area_scale*ndf_scale*Nijk[k]/3;
+				mat_J(e_it.handle().idx()+Start_id, idc+k*m_vnum+m_vnum*3) += area_scale*ndf_scale*Nijk[k]/3;
+			}
+			mat_f(e_it.handle().idx()+Start_id, 0) += area_scale*ndf_scale*
+				( OpenMesh::dot(avg_light1, T_Mesh.normal(fh1)) - OpenMesh::dot(avg_light2, T_Mesh.normal(fh2)) - (Cf1 - Cf2) );
+
+			//for (int k = 0; k < 3; k++) {
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, ida+m_vnum*0) -= area_scale*ndf_scale*sqrt(omegaij)*n2ax[k];
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, ida+m_vnum*1) -= area_scale*ndf_scale*sqrt(omegaij)*n2ay[k];
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, ida+m_vnum*2) -= area_scale*ndf_scale*sqrt(omegaij)*n2az[k];
+
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, idb+m_vnum*0) -= area_scale*ndf_scale*sqrt(omegaij)*n2bx[k];
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, idb+m_vnum*1) -= area_scale*ndf_scale*sqrt(omegaij)*n2by[k];
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, idb+m_vnum*2) -= area_scale*ndf_scale*sqrt(omegaij)*n2bz[k];
+
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, idc+m_vnum*0) -= area_scale*ndf_scale*sqrt(omegaij)*n2cx[k];
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, idc+m_vnum*1) -= area_scale*ndf_scale*sqrt(omegaij)*n2cy[k];
+			//	mat_J(e_it.handle().idx()*3+k+Start_id, idc+m_vnum*2) -= area_scale*ndf_scale*sqrt(omegaij)*n2cz[k];
+			//	//mat_f[e_it.handle().idx()*3+k+Start_id, 0] -= area_scale*ndf_scale*sqrt(omegaij)*(Nijk.data()[k]);
 			//}
 
-			//mat_f(e_it.handle().idx()+Start_id, 0) += area_scale*ndf_scale*(OpenMesh::dot(LightInfo, (T_Mesh.normal(fh1) - T_Mesh.normal(fh2))) - (Cf1 - Cf2));
-
-			for (int k = 0; k < 3; k++) {
-				mat_J(e_it.handle().idx()*3+k+Start_id, ida+m_vnum*0) -= area_scale*ndf_scale*sqrt(omegaij)*n2ax[k];
-				mat_J(e_it.handle().idx()*3+k+Start_id, ida+m_vnum*1) -= area_scale*ndf_scale*sqrt(omegaij)*n2ay[k];
-				mat_J(e_it.handle().idx()*3+k+Start_id, ida+m_vnum*2) -= area_scale*ndf_scale*sqrt(omegaij)*n2az[k];
-
-				mat_J(e_it.handle().idx()*3+k+Start_id, idb+m_vnum*0) -= area_scale*ndf_scale*sqrt(omegaij)*n2bx[k];
-				mat_J(e_it.handle().idx()*3+k+Start_id, idb+m_vnum*1) -= area_scale*ndf_scale*sqrt(omegaij)*n2by[k];
-				mat_J(e_it.handle().idx()*3+k+Start_id, idb+m_vnum*2) -= area_scale*ndf_scale*sqrt(omegaij)*n2bz[k];
-
-				mat_J(e_it.handle().idx()*3+k+Start_id, idc+m_vnum*0) -= area_scale*ndf_scale*sqrt(omegaij)*n2cx[k];
-				mat_J(e_it.handle().idx()*3+k+Start_id, idc+m_vnum*1) -= area_scale*ndf_scale*sqrt(omegaij)*n2cy[k];
-				mat_J(e_it.handle().idx()*3+k+Start_id, idc+m_vnum*2) -= area_scale*ndf_scale*sqrt(omegaij)*n2cz[k];
-				//mat_f[e_it.handle().idx()*3+k+Start_id, 0] -= area_scale*ndf_scale*sqrt(omegaij)*(Nijk.data()[k]);
-			}
-
-			for (int k = 0; k < 3; ++ k) {
-				mat_f(e_it.handle().idx()*3+k+Start_id, 0) += area_scale*ndf_scale*sqrt(omegaij)*(T_Mesh.normal(fh1).data()[k] - T_Mesh.normal(fh2).data()[k]);
-			}
+			//for (int k = 0; k < 3; ++ k) {
+			//	mat_f(e_it.handle().idx()*3+k+Start_id, 0) += area_scale*ndf_scale*sqrt(omegaij)*(T_Mesh.normal(fh1).data()[k] - T_Mesh.normal(fh2).data()[k]);
+			//}
 
 		}
-		Start_id += T_Mesh.n_edges()*3;
+		Start_id += T_Mesh.n_edges();
 	} 
 
 	if (UseTVNorm) {
@@ -11304,10 +11306,10 @@ void TriangularMesh::GradientTesting(double h = 0.0005, bool TestTV = false, int
 			ndp_eta = 1.0;
 			break;
 		case 1:
-			m_beta = 1.0; 
+			ndf_eta = 1.0; 
 			break;
 		case 2:
-			ndp_eta = 1.0; m_beta = 1.0; lapParam = 1.0;
+			ndp_eta = 1.0; ndf_eta = 1.0; m_beta = 1.0; lapParam = 1.0;
 			break;
 		case 3:
 			lapParam = 1.0; ndf_eta = 1.0; ndp_eta = 1.0; m_beta = 1.0; fidParam = 1.0;
