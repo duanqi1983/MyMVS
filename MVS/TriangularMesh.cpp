@@ -8350,14 +8350,17 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 
 			// solve the u-sub problem, using Levenberg–Marquardt Algorithm
 			double sigma, eOld, eNew;
-			double var = 2.0, epsilon1 = 1.0e-12, epsilon2 = 1.0e-12, avgEdgeLength = 0.0;
+			double var = 2.0, epsilon1 = 1.0e-12, epsilon2 = 1.0e-12, avgEdgeLength = 0.0, minEdgeLength = -1.0;
 			for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
 				int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();
 				int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx();
 				double edge_length = (T_Mesh.point(MyMesh::VertexHandle(iid)) - T_Mesh.point(MyMesh::VertexHandle(jid))).length();
 				avgEdgeLength += edge_length;
+				if (minEdgeLength > edge_length) {
+					minEdgeLength = edge_length;
+				}
 			}
-			avgEdgeLength = avgEdgeLength/T_Mesh.n_edges();
+			avgEdgeLength = avgEdgeLength/T_Mesh.n_edges();    avgEdgeLength = minEdgeLength;
 
 			int dimension = m_vnum*3 + m_vnum*3;
 			DenseMatrix m_b(dimension, 1);
@@ -8506,7 +8509,7 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 					//modify m_x, do not change too much according to the value of MinEdgeLength
 					double maxChange = 0.0;
 					for (int i = 0; i < m_vnum; ++ i) {
-						OpenMesh::Vec3f deltaP(m_x[i], m_x[m_vnum + i], m_x[2*m_vnum + i]);
+						OpenMesh::Vec3f deltaP(m_x[i+m_vnum*0], m_x[i+m_vnum*1], m_x[i+m_vnum*2]);
 						maxChange = (deltaP.length() > maxChange)?deltaP.length():maxChange;
 					}
 					//cout << endl << "The max delta p is " << maxChange/avgEdgeLength << " of avg edge length" << endl;
@@ -8522,8 +8525,8 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 					originalLight[v_it.handle().idx()] = 
 						OpenMesh::Vec3f(m_vertices[v_it.handle().idx()].light_x, m_vertices[v_it.handle().idx()].light_y, m_vertices[v_it.handle().idx()].light_z);
 					originalPosition[v_it.handle().idx()] = T_Mesh.point(v_it.handle());
-					normX += originalPosition[v_it.handle().idx()].sqrnorm();
-					for (int i = 0; i < 3; ++i) {
+					normX += originalPosition[v_it.handle().idx()].sqrnorm() + originalLight[v_it.handle().idx()].sqrnorm();
+					for (int i = 0; i < 6; ++i) {
 						l0h += 0.5*m_x[i*m_vnum + idx]*(tau[i*m_vnum + idx]*m_x[i*m_vnum + idx] + m_b[i*m_vnum + idx]);
 					}
 				}
@@ -9004,7 +9007,7 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 		//	mat_f(vertex_id*3+2+Start_id, 0) += area_scale*beta_scale*(T_Mesh.normal(v_it).data()[2] - m_vertices[vertex_id].ps_normal_z);
 		//}
 		gmm::linalg_traits< gmm::wsvector<double> >::const_iterator it, ite;
-		// for each point, it light, normal and intensity should satisfy lambert law
+		// for each point, it light, normal and intensity should satisfy Lambert law
 		for (MyMesh::VertexIter v_it = T_Mesh.vertices_begin(); v_it != T_Mesh.vertices_end(); ++ v_it) {
 			const int vertex_id = v_it.handle().idx();									double area_scale = UseFaceArea?sqrt(m_vertices[vertex_id].BCDArea):1.0;
 			OpenMesh::Vec3f cur_light = OpenMesh::Vec3f(m_vertices[vertex_id].light_x,m_vertices[vertex_id].light_y,m_vertices[vertex_id].light_z);
@@ -9012,7 +9015,7 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 				for (it = vect_const_begin(gmm::mat_const_row(gradJ, vertex_id*3+k)); it != vect_const_end(gmm::mat_const_row(gradJ, vertex_id*3+k)); ++ it) {
 					mat_J(vertex_id+Start_id, it.index()) += area_scale*beta_scale*cur_light[k]*gradJ(vertex_id*3+k, it.index());
 				}
-				mat_J(vertex_id+Start_id, vertex_id*3+k+m_vnum*3) += area_scale*beta_scale*T_Mesh.normal(v_it).data()[k];
+				mat_J(vertex_id+Start_id, vertex_id+m_vnum*k+m_vnum*3) += area_scale*beta_scale*T_Mesh.normal(v_it).data()[k];
 			}
 			mat_f(vertex_id+Start_id, 0) += area_scale*beta_scale*(OpenMesh::dot(cur_light, T_Mesh.normal(v_it)) - m_vertices[vertex_id].intensity);
 		}
@@ -9028,8 +9031,8 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();			double area_scale = UseFaceArea?sqrt(m_vertices[iid].BCDArea):1.0;
 			int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx();
 			for (int k = 0; k < 3; ++ k) {
-				mat_J(e_it.handle().idx()*3+k+Start_id, iid*3+k+m_vnum*3) += area_scale*ndp_scale*1.0;
-				mat_J(e_it.handle().idx()*3+k+Start_id, jid*3+k+m_vnum*3) -= area_scale*ndp_scale*1.0;
+				mat_J(e_it.handle().idx()*3+k+Start_id, iid+k*m_vnum+m_vnum*3) += area_scale*ndp_scale*1.0;
+				mat_J(e_it.handle().idx()*3+k+Start_id, jid+k*m_vnum+m_vnum*3) -= area_scale*ndp_scale*1.0;
 			}
 			mat_f(e_it.handle().idx()*3+0+Start_id, 0) += area_scale*ndp_scale*(m_vertices[iid].light_x - m_vertices[jid].light_x);
 			mat_f(e_it.handle().idx()*3+1+Start_id, 0) += area_scale*ndp_scale*(m_vertices[iid].light_y - m_vertices[jid].light_y);
