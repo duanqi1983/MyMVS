@@ -8425,7 +8425,10 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 			double normG = gmm::mat_norminf(m_b); 
 
 			numc::SparseSolver solver;	double *b = new double[dimension];	double *vx = new double[dimension];
-			int iteration = 0; int maxStep = 50;  // 100
+			int iteration = 0; int maxStep = 300;
+			if (UseTVU || UseTVNorm) {
+				maxStep = 50;
+			}
 			while (iteration++ < maxStep) {
 				sprintf(buffer, "%.2d:", iteration);
 				cout << endl << buffer;
