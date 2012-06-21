@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <ExecutablePath>C:\Program Files\NAG\CL09\clw6i09dal\bin;C:\MATLAB\R2011b\bin\win64;C:\OpenCV2.3\build\x64\vc10\bin;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.0\bin;C:\Program Files\OpenNI\Bin64;C:\Program Files\PCL 1.4.0\3rdParty\VTK 5.8.0\bin;C:\Program Files\PCL 1.4.0\3rdParty\qhull\bin;C:\Program Files\PCL 1.4.0\3rdParty\flann\bin;C:\Program Files\PCL 1.4.0\3rdParty\Eigen\bin;C:\Program Files\PCL 1.4.0\bin;C:\Program Files %28x86%29\Microsoft DirectX SDK %28February 2010%29\Utilities\bin\x64;$(ExecutablePath)</ExecutablePath>
+    <IncludePath>C:\Program Files\NAG\CL09\clw6i09dal\include;C:\Program Files\CGAL-3.9\auxiliary\taucs\include;C:\Program Files\CGAL-3.9\auxiliary\gmp\include;C:\Program Files\CGAL-3.9\include;C:\Program Files\PCL 1.4.0\3rdParty\VTK 5.8.0\include\vtk-5.8;C:\Program Files\PCL 1.4.0\3rdParty\qhull\include;C:\Program Files\PCL 1.4.0\3rdParty\flann\include;C:\Program Files\PCL 1.4.0\3rdParty\Eigen\include;C:\Program Files\PCL 1.4.0\include\pcl-1.4;C:\OpenCV2.31\build\include;C:\OpenCV2.31\build\include\opencv;C:\MATLAB\R2011b\extern\include;C:\Program Files\PCL 1.4.0\3rdParty\Boost\include;C:\Program Files %28x86%29\Intel\Composer XE 2011 SP1\mkl\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files\NAG\CL09\clw6i09dal\lib;C:\Program Files %28x86%29\Intel\Composer XE 2011 SP1\mkl\lib\intel64;C:\Program Files\CGAL-3.9\auxiliary\taucs\lib;C:\Program Files\CGAL-3.9\auxiliary\gmp\lib;C:\Program Files\CGAL-3.9\build\lib;C:\Program Files\PCL 1.4.0\3rdParty\VTK 5.8.0\lib\vtk-5.8;C:\Program Files\PCL 1.4.0\3rdParty\qhull\lib;C:\Program Files\PCL 1.4.0\3rdParty\flann\lib;C:\Program Files\PCL 1.4.0\lib;C:\MATLAB\R2011b\extern\lib\win64\microsoft;C:\OpenCV2.31\build\x64\vc10_NoTBB\lib;C:\Program Files\PCL 1.4.0\3rdParty\Boost\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup />
+  <ItemGroup />
+</Project>

@@ -1,0 +1,16 @@
+# The comments
+-idir ..\examples\templeRing
+-ft png
+-mdir ..\examples\templeRing\masks
+-mft bmp
+-me brdf
+-bdb ..\examples\brdfdb
+#-fid 100
+#-beta 500
+#-np 20
+#-nf 20
+#-var 100
+#-fc 1
+#-rav 1.0
+#-lap 0
+#-tvn 0.01

@@ -1,0 +1,166 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <omp.h>
+
+#include <cv.h>
+#include <cxcore.h>
+#include <highgui.h>
+
+using namespace cv;
+
+
+float* read_dataset(int rows, int cols)
+{
+    float* data = (float*) malloc(rows*cols*sizeof(float));
+    for (int i=0;i<rows;++i)
+        for (int j=0;j<cols;++j) data[i*cols+j] = i*cols+j;
+    return data;
+}
+
+float* read_testset(int rows, int cols)
+{
+    float* data = (float*) malloc(rows*cols*sizeof(float));
+    for (int i=0;i<rows;++i)
+        for (int j=0;j<cols;++j) data[i*cols+j] = i*cols+j;
+    return data;
+}
+
+void write_results(const char* filename, int *data, int rows, int cols)
+{
+    FILE* fout = fopen(filename,"w");
+    if (!fout) {
+        printf("Cannot open output file.\n");
+        exit(1);
+    }
+    
+    int* p = data;
+    for (int i=0;i<rows;++i) {
+        for (int j=0;j<cols;++j) {
+            fprintf(fout,"%d ",*p);
+            p++;
+        }
+        fprintf(fout,"\n");
+    }
+    fclose(fout);
+}
+
+
+
+int function(int z)
+{
+    int rows = 10000;
+    int cols = 10;
+    int tcount = 1000;
+
+    //printf("Reading input data file.\n");
+    float* dataset = read_dataset(rows, cols);
+    //printf("Reading test data file.\n");
+    float* testset = read_testset(tcount, cols);
+    
+    //int nn = 3;
+    //int* result = (int*) malloc(tcount*nn*sizeof(int));
+    //float* dists = (float*) malloc(tcount*nn*sizeof(float));
+    
+	/*
+	struct FLANNParameters p = DEFAULT_FLANN_PARAMETERS;
+    p.algorithm = KDTREE;
+    p.trees = 8;
+    //p.log_level = LOG_INFO;
+    
+    float speedup;
+    printf("Computing index.\n");
+    flann_index_t index_id = flann_build_index(dataset, rows, cols, &speedup, &p);
+    flann_find_nearest_neighbors_index(index_id, testset, tcount, result, dists, nn, &p);
+
+	*/
+
+	int nn = 10;
+
+	double timer_start = (double)getTickCount();
+	Mat features = Mat(rows, cols, CV_32F, dataset).clone();
+	cv::flann::Index index = cv::flann::Index(features, cv::flann::KDTreeIndexParams(4));	
+
+
+	//cv::flann::SearchParams searchParams;
+
+
+	vector<float> query;
+	vector<int> indices;
+	vector<float> dists;
+	query.resize(cols);
+	indices.resize(cols);
+	dists.resize(cols);
+	
+	for (int i=0;i<tcount;i++)
+	{
+		for (int j=0;j<cols;j++) query[j]= testset[i*cols+j];
+		for (int k=0;k<100;k++)
+		{
+		index.knnSearch(query, indices, dists, nn, cv::flann::SearchParams(k));
+		printf("K = %d\n", k);
+		for (int j=0;j<nn;j++) printf("%f ",dists[j]);
+		printf("\n");
+		}
+		
+		/*
+		printf("Search number : %d\n", i);
+		for (int j=0;j<nn;j++) printf("%d ",indices[j]);
+		printf("\n");
+		*/
+		
+		//printf("%f\n", dists[0]);
+	}
+
+	printf("KD-tree search         -            Time = %lfs\n\n",((double)getTickCount()-timer_start)/getTickFrequency());
+	timer_start = (double)getTickCount();
+
+	vector<double> list;
+	list.resize(rows);
+	for (int i=0;i<tcount;i++)
+	{
+		double mindist = 1000000000;
+		for (int j=0;j<rows;j++)
+		{
+			double d = 0;
+			double t;
+			for (int k=0;k<cols;k++) 
+			{
+				t =testset[i*cols+k]-dataset[j*cols+k];
+				d+= t*t;
+			}
+			list[j] = d;
+		}
+		sort(list.begin(), list.end());
+		//printf("%f\n",mindist);
+	}
+	printf("Linear search        -        Time = %lfs\n\n",((double)getTickCount()-timer_start)/getTickFrequency());
+
+	printf("\n\n\n\n");
+	
+
+    
+    //write_results("results.dat",result, tcount, nn);
+	
+    
+    //flann_free_index(index_id, &p);
+    free(dataset);
+    free(testset);
+    //free(result);
+    //free(dists);
+
+
+    return 0;
+}
+
+int main()
+{
+
+	omp_set_num_threads(omp_get_num_procs());
+	#pragma omp parallel for schedule(dynamic,1)
+	for (int i=0;i<1000;i++) function(i);
+	
+	getch();
+	return 0;
+}

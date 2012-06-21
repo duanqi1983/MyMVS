@@ -1,0 +1,215 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{517E4BBF-137C-492C-9168-0DB1D75F680D}</ProjectGuid>
+    <RootNamespace>MVS</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="x64.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="x64.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\libDaisy;..\libCMinPack;..\lbfgsb;..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;WITH_OPENMP;WITH_OPENCV;WITH_OPENCV_EXTRAS;_USE_MATH_DEFINES;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <OpenMPSupport>false</OpenMPSupport>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>CGAL_Core-vc100-mt-gd.lib;CGAL_ImageIO-vc100-mt-gd.lib;CGAL-vc100-mt-gd.lib;libmx.lib;libmex.lib;libmat.lib;libut.lib;libeng.lib;libtrimesh.a;libgluit.a;libCMinPackD.lib;libDaisyD.lib;OpenMeshCored.lib;OpenMeshToolsd.lib;opencv_imgproc231d.lib;opencv_core231d.lib;opencv_highgui231d.lib;opencv_calib3d231d.lib;opencv_legacy231d.lib;opencv_flann231d.lib;opencv_contrib231d.lib;mkl_solver_sequential.lib;mkl_intel_c.lib;mkl_sequential.lib;mkl_core.lib;pcl_common-gd.lib;pcl_features-gd.lib;pcl_filters-gd.lib;pcl_io-gd.lib;pcl_kdtree-gd.lib;pcl_keypoints-gd.lib;pcl_octree-gd.lib;pcl_registration-gd.lib;pcl_search-gd.lib;pcl_surface-gd.lib;pcl_visualization-gd.lib;vtkIO-gd.lib;vtkCommon-gd.lib;vtksys-gd.lib;vtkzlib-gd.lib;vtkVolumeRendering-gd.lib;vtkViews-gd.lib;vtkverdict-gd.lib;vtksqlite-gd.lib;vtkRendering-gd.lib;vtkInfovis-gd.lib;vtkHybrid-gd.lib;vtkGraphics-gd.lib;vtkfreetype-gd.lib;vtkGeovis-gd.lib;vtkGenericFiltering-gd.lib;vtkFiltering-gd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\libDaisy;..\libCMinPack;..\lbfgsb;..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;WITH_OPENMP;WITH_OPENCV;WITH_OPENCV_EXTRAS;_USE_MATH_DEFINES;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <OpenMPSupport>false</OpenMPSupport>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>libCMinPackD.lib;libDaisyD.lib;OpenMeshCored.lib;OpenMeshToolsd.lib;opencv_imgproc231d.lib;opencv_core231d.lib;opencv_highgui231d.lib;opencv_calib3d231d.lib;opencv_legacy231d.lib;opencv_flann231d.lib;opencv_contrib231d.lib;mkl_blas95_lp64.lib;mkl_core.lib;mkl_sequential.lib;mkl_intel_lp64.lib;mkl_lapack95_lp64.lib;mkl_solver_lp64.lib;pcl_common-gd.lib;pcl_features-gd.lib;pcl_filters-gd.lib;pcl_io-gd.lib;pcl_kdtree-gd.lib;pcl_keypoints-gd.lib;pcl_octree-gd.lib;pcl_registration-gd.lib;pcl_search-gd.lib;pcl_surface-gd.lib;pcl_visualization-gd.lib;vtkIO-gd.lib;vtkCommon-gd.lib;vtksys-gd.lib;vtkzlib-gd.lib;vtkVolumeRendering-gd.lib;vtkViews-gd.lib;vtkverdict-gd.lib;vtksqlite-gd.lib;vtkRendering-gd.lib;vtkInfovis-gd.lib;vtkHybrid-gd.lib;vtkGraphics-gd.lib;vtkfreetype-gd.lib;vtkGeovis-gd.lib;vtkGenericFiltering-gd.lib;vtkFiltering-gd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>..\libDaisy;..\libCMinPack;..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;WITH_OPENMP;WITH_OPENCV;WITH_OPENCV_EXTRAS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <OpenMPSupport>true</OpenMPSupport>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>CGAL_Core-vc100-mt.lib;CGAL_ImageIO-vc100-mt.lib;CGAL-vc100-mt.lib;libmx.lib;libmex.lib;libmat.lib;libut.lib;libeng.lib;mclcommain.lib;libCMinPack.lib;libDaisy.lib;OpenMeshCore.lib;OpenMeshTools.lib;opencv_imgproc231.lib;opencv_core231.lib;opencv_highgui231.lib;opencv_calib3d231.lib;opencv_legacy231.lib;opencv_flann231.lib;opencv_contrib231.lib;mkl_solver_sequential.lib;mkl_intel_c.lib;mkl_sequential.lib;mkl_core.lib;pcl_common.lib;pcl_features.lib;pcl_filters.lib;pcl_io.lib;pcl_kdtree.lib;pcl_keypoints.lib;pcl_octree.lib;pcl_registration.lib;pcl_search.lib;pcl_surface.lib;pcl_visualization.lib;vtkIO.lib;vtkCommon.lib;vtksys.lib;vtkzlib.lib;vtkVolumeRendering.lib;vtkViews.lib;vtkverdict.lib;vtksqlite.lib;vtkRendering.lib;vtkInfovis.lib;vtkHybrid.lib;vtkGraphics.lib;vtkfreetype.lib;vtkGeovis.lib;vtkGenericFiltering.lib;vtkFiltering.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>..\libDaisy;..\libCMinPack;..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;WITH_OPENMP;WITH_OPENCV;WITH_OPENCV_EXTRAS;_USE_MATH_DEFINES;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <OpenMPSupport>true</OpenMPSupport>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>libCMinPack.lib;libDaisy.lib;OpenMeshCore.lib;OpenMeshTools.lib;opencv_imgproc231.lib;opencv_core231.lib;opencv_highgui231.lib;opencv_calib3d231.lib;opencv_legacy231.lib;opencv_flann231.lib;opencv_contrib231.lib;mkl_blas95_lp64.lib;mkl_core.lib;mkl_sequential.lib;mkl_intel_lp64.lib;mkl_lapack95_lp64.lib;mkl_solver_lp64.lib;pcl_common.lib;pcl_features.lib;pcl_filters.lib;pcl_io.lib;pcl_kdtree.lib;pcl_keypoints.lib;pcl_octree.lib;pcl_registration.lib;pcl_search.lib;pcl_surface.lib;pcl_visualization.lib;vtkIO.lib;vtkCommon.lib;vtksys.lib;vtkzlib.lib;vtkVolumeRendering.lib;vtkViews.lib;vtkverdict.lib;vtksqlite.lib;vtkRendering.lib;vtkInfovis.lib;vtkHybrid.lib;vtkGraphics.lib;vtkfreetype.lib;vtkGeovis.lib;vtkGenericFiltering.lib;vtkFiltering.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="lbfgs.c" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="mkl_addon.cpp" />
+    <ClCompile Include="POINT3D.cpp" />
+    <ClCompile Include="TriangularMesh.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="testCMinPack.bak" />
+    <None Include="testLBFGS.bak" />
+    <None Include="testLibFLANNinOpenCV.bak" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="arithmetic_ansi.h" />
+    <ClInclude Include="arithmetic_sse_double.h" />
+    <ClInclude Include="arithmetic_sse_float.h" />
+    <ClInclude Include="chooseStereoPairs.h" />
+    <ClInclude Include="constants.h" />
+    <ClInclude Include="lbfgs.h" />
+    <ClInclude Include="LBFGSpart.h" />
+    <ClInclude Include="LMpart.h" />
+    <ClInclude Include="matrix.h" />
+    <ClInclude Include="mkl_addon.h" />
+    <ClInclude Include="ModelingOptions.h" />
+    <ClInclude Include="output.h" />
+    <ClInclude Include="parameters.h" />
+    <ClInclude Include="POINT3D.h" />
+    <ClInclude Include="readData.h" />
+    <ClInclude Include="rectify.h" />
+    <ClInclude Include="speigen.h" />
+    <ClInclude Include="spmatrix.h" />
+    <ClInclude Include="testMatchingResult.h" />
+    <ClInclude Include="track.h" />
+    <ClInclude Include="TriangularMesh.h" />
+    <ClInclude Include="TypeDef.h" />
+    <ClInclude Include="viewPoint.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libCMinPack\libCMinPack.vcxproj">
+      <Project>{b9388441-f785-4c10-a806-7644b4d4ee71}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\libDaisy\libDaisy.vcxproj">
+      <Project>{5f96411b-d588-4142-845f-36266bb4419a}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

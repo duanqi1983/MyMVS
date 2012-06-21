@@ -1,0 +1,138 @@
+/*      driver for lmdif example. */
+
+//	It demonstrates fitting a function
+//	f(x)=a*x*x*x + b*x*x + c
+
+#include <stdio.h>
+#include <conio.h>
+#include <math.h>
+#include "cminpack.h"
+#include <omp.h>
+
+double** independent_variables;
+double** observed_values;
+
+//int cnt = 0;
+
+int fcn(void *p, int m, int n, const double *x, double *fvec, int iflag)
+{
+	double a = x[0];
+	double b = x[1];
+	double c = x[2];
+	//cnt++;
+	//printf("cnt = %d   -   a = %10.6lf   -   b = %10.6lf   -   c = %10.6lf\n",cnt,a,b,c);
+	//printf("error:\n");
+	int index = (int) p;
+	for (int i = 0; i < m; i++)
+	{		
+		double xi = independent_variables[index][i];
+		double observed_value = observed_values[index][i];
+		double fitted_value = a*xi*xi*xi + b*xi*xi + c;
+		fvec[i] = fitted_value - observed_value;
+		//printf("%10.3lf ",fvec[i]);
+	}
+	//printf("\n");
+	return 0;
+}
+
+void generateData(int index, int m, int n)
+{
+		// ------- Generate data
+	independent_variables[index] = new double[m]; //this is the vector of independent variables 
+	observed_values[index] = new double[m]; //this is the vector of observed variables to be fitted
+	for (int i=0;i<m;i++)
+	{
+		independent_variables[index][i]=i;
+		double xi=independent_variables[index][i];
+		double yi=index*xi*xi*xi + index*xi*xi + index;
+		observed_values[index][i]=yi;
+	}
+	// ---------
+}
+
+void optimization(int index)
+{
+	int m = 1000; //no. of observation variables
+	int n = 3; //no. of paremeters 
+
+	double* x=new double[n]; //initial estimate of parameters vector
+	x[0]=.1;
+	x[1]=.1;
+	x[2]=.1;
+
+	double* fvec = new double[m]; //no need to populate 
+	double ftol = 1e-08; //tolerance
+	double xtol = 1e-08; //tolerance
+	double gtol = 1e-08; //tolerance
+	int maxfev = 400; //maximum function evaluations
+	double epsfcn=1e-08; //tolerance
+	double* diag=new double[n]; //some internal thing
+	int mode=1; //some internal thing
+	double factor=1; // a default recommended value
+	int nprint=0; //don't know what it does
+	int info=0; //output variable
+	int nfev=0; //output variable will store no. of function evals
+	double* fjac=new double[m*n]; //output array of jacobian
+	int ldfjac=m; //recommended setting
+	int* ipvt=new int[n]; //for internal use
+	double* qtf=new double[n]; //for internal use
+	double* wa1=new double[n]; //for internal use
+	double* wa2=new double[n]; //for internal use
+	double* wa3=new double[n]; //for internal use
+	double* wa4=new double[m]; //for internal use
+
+	
+	 info = lmdif(fcn, (void *)index, m, n, x, fvec, ftol, xtol, gtol, maxfev, epsfcn, 
+	 diag, mode, factor, nprint, &nfev, fjac, ldfjac, 
+	 ipvt, qtf, wa1, wa2, wa3, wa4);
+	 
+
+	//the below is output result. compare it with the values used to generate 
+	//observed variables
+	double a = x[0];
+	double b = x[1];
+	double c = x[2];
+
+	printf("index = %d   a = %10.6lf   -   b = %10.6lf   -   c = %10.6lf\n",index,a,b,c);
+
+	delete[] x;
+	delete[] fvec;
+	delete[] diag;
+	delete[] fjac;
+	delete[] ipvt;
+	delete[] qtf;
+	delete[] wa1;
+	delete[] wa2;
+	delete[] wa3;
+	delete[] wa4;
+
+
+}
+
+int main()
+{
+	omp_set_num_threads(omp_get_num_procs());
+
+	independent_variables = new double *[1000];
+	observed_values = new double *[1000];
+
+	for (int i=0;i<1000;i++) generateData(i,1000,3);
+
+#pragma omp parallel for schedule(dynamic,1)
+	for (int i=0;i<1000;i++) 
+	{	
+		//printf("index = %d\n",i);
+		optimization(i);
+	}
+
+	for (int i=0;i<1000;i++)
+	{
+		delete[] independent_variables[i];
+		delete[] observed_values[i];
+	}
+
+
+	_getch();
+	return 0;
+
+}
