@@ -82,6 +82,7 @@ public:
 		ALM_TVU				= false;
 		penParam			= 0.01;
 		regParam			= 1.0;
+		pcParam				= 0.0;
 		lapParam			= 0;
 
 		Is_Matched			= true;
@@ -171,6 +172,10 @@ public:
 				name.substr(name.find_last_of("-")+1) == "beta") {
 					ifstr >> m_beta;
 			}
+			if (name.substr(name.find_last_of("-")+1) == "PC" ||
+				name.substr(name.find_last_of("-")+1) == "pc") {
+					ifstr >> pcParam; 
+			}
 			if (name.substr(name.find_last_of("-")+1) == "NF" ||
 				name.substr(name.find_last_of("-")+1) == "nf") {
 					ifstr >> ndf_eta; 
@@ -250,6 +255,7 @@ public:
 	bool	ALM_TVU;
 	double	penParam;
 	double	regParam;
+	double	pcParam;
 	double  lapParam;
 
 	bool	Is_Matched;
@@ -378,6 +384,9 @@ void ParseParam(int argc, char* argv[], ModelingOptions &options)
 		}
 		if (opt == "BETA" || opt == "beta") {
 			options.m_beta	= atof(param.c_str());	i++;
+		}
+		if (opt == "PC" || opt == "pc") {
+			options.pcParam	= atof(param.c_str());	i++;
 		}
 		if (opt == "NF" || opt == "nf") {
 			options.ndf_eta	= atof(param.c_str());	i++;

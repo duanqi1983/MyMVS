@@ -283,7 +283,8 @@ int main(int argc, char** argv)
 			UpdateVertexPSNormal(psnormalfile.c_str());
 			//CubicSplineFittingPSNormal(iter_step, MOptions.fitting_choice, MOptions.range_value);
 		}
-		TVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.fidParam, MOptions.m_beta, MOptions.ndp_eta, MOptions.ndf_eta, MOptions.varsigma, MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, iter_step, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
+		TVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.fidParam, MOptions.m_beta, MOptions.ndp_eta, MOptions.ndf_eta, MOptions.varsigma, MOptions.pcParam,
+			MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, iter_step, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
 	}
 	
 	printf("\nALM operation time = %lfs\n",((double)cv::getTickCount()-timer_start)/cv::getTickFrequency());
