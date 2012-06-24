@@ -8361,7 +8361,7 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 					minEdgeLength = edge_length;
 				}
 			}
-			avgEdgeLength = avgEdgeLength/T_Mesh.n_edges();    //avgEdgeLength = minEdgeLength;
+			avgEdgeLength = avgEdgeLength/T_Mesh.n_edges();    avgEdgeLength = minEdgeLength;
 
 			int dimension = m_vnum*3 + m_vnum*3;
 			DenseMatrix m_b(dimension, 1);
@@ -9214,9 +9214,9 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 				mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*1) -= area_scale*ndf_scale*avg_light2[k]*n2cy[k];
 				mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*2) -= area_scale*ndf_scale*avg_light2[k]*n2cz[k];
 
-				mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*k+m_vnum*3) += area_scale*ndf_scale*Nijk[k]/3.0;
-				mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*k+m_vnum*3) += area_scale*ndf_scale*Nijk[k]/3.0;
-				mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*k+m_vnum*3) += area_scale*ndf_scale*Nijk[k]/3.0;
+				mat_J(e_it.handle().idx()+Start_id, ida+m_vnum*k+m_vnum*3) -= area_scale*ndf_scale*Nijk[k]/3.0;
+				mat_J(e_it.handle().idx()+Start_id, idb+m_vnum*k+m_vnum*3) -= area_scale*ndf_scale*Nijk[k]/3.0;
+				mat_J(e_it.handle().idx()+Start_id, idc+m_vnum*k+m_vnum*3) -= area_scale*ndf_scale*Nijk[k]/3.0;
 			}
 			mat_f(e_it.handle().idx()+Start_id, 0) += area_scale*ndf_scale*
 				( OpenMesh::dot(avg_light1, T_Mesh.normal(fh1)) - OpenMesh::dot(avg_light2, T_Mesh.normal(fh2)) - (Cf1 - Cf2) );
