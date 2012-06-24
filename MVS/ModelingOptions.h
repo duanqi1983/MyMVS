@@ -75,8 +75,9 @@ public:
 
 		fidParam			= 0;
 		m_beta				= 0;
-		ndp_eta				= 0;
-		ndf_eta				= 0;
+		pcd_eta				= 0;
+		fcd_eta				= 0;
+		fnd_eta				= 0;
 		varsigma			= 20;
 		ALM_TVNorm			= false;
 		ALM_TVU				= false;
@@ -176,13 +177,17 @@ public:
 				name.substr(name.find_last_of("-")+1) == "pc") {
 					ifstr >> pcParam; 
 			}
-			if (name.substr(name.find_last_of("-")+1) == "NF" ||
-				name.substr(name.find_last_of("-")+1) == "nf") {
-					ifstr >> ndf_eta; 
+			if (name.substr(name.find_last_of("-")+1) == "FCD" ||
+				name.substr(name.find_last_of("-")+1) == "fcd") {
+					ifstr >> fcd_eta; 
 			}
-			if (name.substr(name.find_last_of("-")+1) == "NP" ||
-				name.substr(name.find_last_of("-")+1) == "np") {
-					ifstr >> ndp_eta; 
+			if (name.substr(name.find_last_of("-")+1) == "FND" ||
+				name.substr(name.find_last_of("-")+1) == "fnd") {
+					ifstr >> fnd_eta; 
+			}
+			if (name.substr(name.find_last_of("-")+1) == "PCD" ||
+				name.substr(name.find_last_of("-")+1) == "pcd") {
+					ifstr >> pcd_eta; 
 			}
 			if (name.substr(name.find_last_of("-")+1) == "VAR" ||
 				name.substr(name.find_last_of("-")+1) == "var") {
@@ -248,8 +253,9 @@ public:
 
 	double	fidParam;
 	double	m_beta;
-	double	ndp_eta;
-	double	ndf_eta;
+	double	pcd_eta;
+	double	fcd_eta;
+	double	fnd_eta;
 	double	varsigma;
 	bool	ALM_TVNorm;
 	bool	ALM_TVU;
@@ -388,11 +394,14 @@ void ParseParam(int argc, char* argv[], ModelingOptions &options)
 		if (opt == "PC" || opt == "pc") {
 			options.pcParam	= atof(param.c_str());	i++;
 		}
-		if (opt == "NF" || opt == "nf") {
-			options.ndf_eta	= atof(param.c_str());	i++;
+		if (opt == "FCD" || opt == "fcd") {
+			options.fcd_eta	= atof(param.c_str());	i++;
 		}
-		if (opt == "NP" || opt == "np") {
-			options.ndp_eta	= atof(param.c_str());	i++;
+		if (opt == "FND" || opt == "fnd") {
+			options.fnd_eta	= atof(param.c_str());	i++;
+		}
+		if (opt == "PCD" || opt == "pcd") {
+			options.pcd_eta	= atof(param.c_str());	i++;
 		}
 		if (opt == "VAR" || opt == "var") {
 			options.varsigma	= atof(param.c_str());	i++;

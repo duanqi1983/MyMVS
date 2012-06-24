@@ -263,7 +263,7 @@ int main(int argc, char** argv)
 	//testTVTM.GradientTesting(0.0001, false, 3);
 	//testTVTM.GradientTesting(0.0001, true, 0);
 	//testTVTM.GradientTesting(0.0001, true, 1);
-	testTVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.fidParam, MOptions.m_beta, MOptions.ndp_eta, MOptions.ndf_eta, MOptions.varsigma, MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, 200, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
+	testTVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.fidParam, MOptions.m_beta, MOptions.pcd_eta, MOptions.fcd_eta, MOptions.fnd_eta, MOptions.varsigma, MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, 200, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
 	//ReleaseResources();
 	engClose(m_ep);
 	return 0;
@@ -272,7 +272,7 @@ int main(int argc, char** argv)
 	timer_start = (double)cv::getTickCount();
 	TriangularMesh TVTM;
 	TVTM.LoadMeshFile(meshfile.c_str());//bunny2-smooth  pyramid2  Apple
-	for (int iter_step = 0; iter_step < 3; iter_step ++) {
+	for (int iter_step = 0; iter_step < 1; iter_step ++) {
 		cout << endl << "The " << iter_step << " iteration step of mesh refinement: " << meshfile << endl;
 		sprintf(buffer, "_%.2d", iter_step);
 		psnormalfile = (MOptions.DirName+"VertexPSNormal"+string(buffer)+".txt");
@@ -283,7 +283,7 @@ int main(int argc, char** argv)
 			UpdateVertexPSNormal(psnormalfile.c_str());
 			//CubicSplineFittingPSNormal(iter_step, MOptions.fitting_choice, MOptions.range_value);
 		}
-		TVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.fidParam, MOptions.m_beta, MOptions.ndp_eta, MOptions.ndf_eta, MOptions.varsigma, MOptions.pcParam,
+		TVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.fidParam, MOptions.m_beta, MOptions.pcd_eta, MOptions.fcd_eta, MOptions.fnd_eta, MOptions.varsigma, MOptions.pcParam,
 			MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, iter_step, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
 	}
 	
