@@ -8389,9 +8389,6 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 			if (UsePositionFidelity) {
 				cout << " UFID: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++]; 
 			}
-			if (UseLaplace) {
-				cout << " LAP: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-			}
 			if (UsePointLightDiff) {
 				cout << " LDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 				//cout << " = " << 0.5*m_beta*CalculateNEnergy(T_Mesh, vec_n_energy,UseFaceArea);
@@ -8404,6 +8401,9 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 			}
 			if (UseFaceColorDiff) {
 				cout << " FCDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
+			}
+			if (UseLaplace) {
+				cout << " LAP: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 			}
 			if (UseTVNorm) {
 				cout << " TVN: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
@@ -8592,10 +8592,6 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 					if (UsePositionFidelity) {
 						cout << " UFID: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 						//cout << " = " << 0.5*fidParam*CalculateVEnergy(T_Mesh,UseFaceArea); 
-					}					
-					if (UseLaplace) {
-						cout << " LAP: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-						//cout << " = " << 0.5*lapParam*CalculateLaplaceEnergy(T_Mesh,UseFaceArea);
 					}
 					if (UsePointLightDiff) {
 						cout << " LDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
@@ -8611,6 +8607,10 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 					if (UseFaceColorDiff) {
 						cout << " FCDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 						//cout << " = " << 0.5*ndf_eta*CalculateNDFEnergy(T_Mesh, varsigma,UseFaceArea);
+					}					
+					if (UseLaplace) {
+						cout << " LAP: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
+						//cout << " = " << 0.5*lapParam*CalculateLaplaceEnergy(T_Mesh,UseFaceArea);
 					}
 					if (UseTVNorm) {
 						cout << " TVN: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
