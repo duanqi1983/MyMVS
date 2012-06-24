@@ -42,6 +42,7 @@ string psnormalfile;
 string intensityfile;
 bool ScaleDelta = true;
 bool AnisotropicLaplace = true;
+bool RecordColor = true;
 
 Engine *m_ep = NULL;
 
@@ -72,6 +73,7 @@ int main(int argc, char** argv)
 	ParseParam(argc,argv, MOptions);
 	ScaleDelta = MOptions.ScaleDelta;
 	AnisotropicLaplace = MOptions.AnisotropicLaplace;
+	RecordColor = MOptions.RecordColor;
 	if (MOptions.UseMatlabSolver) {
 		cout << "Use matlab solver for linear equations." << endl;
 		if (!(m_ep = engOpen("\0"))) {
@@ -80,7 +82,8 @@ int main(int argc, char** argv)
 		}
 		engSetVisible(m_ep, false);
 	}
-	ScaleDelta?cout<<"Scale delta P each time. ":cout<<" "; AnisotropicLaplace?cout<<"Using anisotropic laplacian term.":cout<<" "; cout << endl;
+	ScaleDelta?cout<<"Scale delta P each time. ":cout<<" "; AnisotropicLaplace?cout<<"Using anisotropic laplacian term.":cout<<" "; 
+	RecordColor?cout<<"Record vertex color to mesh. ":cout<<" "; cout << endl;
 	path = MOptions.DirName;
 	printf("Number of threads %d\n",omp_get_num_procs());
 	omp_set_num_threads(omp_get_num_procs());

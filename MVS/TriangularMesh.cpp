@@ -8306,7 +8306,11 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 	/*   Parameters setting  */
 	unsigned int innerL = 1; int outL = -1;
 	double outTole = 1.0e-12, stoppingCond;
-	MyMesh T_Mesh = this->m_ObjTriMesh; OpenMesh::Vec3f CurV; OpenMesh::IO::Options write_options;
+	MyMesh T_Mesh = this->m_ObjTriMesh; OpenMesh::Vec3f CurV; 
+	OpenMesh::IO::Options write_options;
+	if (RecordColor) {
+		write_options.set(OpenMesh::IO::Options::VertexColor); 
+	}
 	T_Mesh.request_face_normals();		T_Mesh.update_face_normals();
 	T_Mesh.request_vertex_normals();	T_Mesh.update_vertex_normals();
 	bool UsePositionFidelity = fidParam>0?true:false;	bool UsePointLightDiff = (m_beta>0)?true:false;		bool UseLaplace = (lapParam>0)?true:false; 
@@ -8418,7 +8422,6 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 				UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColor?"PC":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_", UseFaceNormalDiff?"FND":"_",
 				UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_", 
 				fidParam, m_beta, penParam, regParam, pcParam, pcd_eta, fcd_eta, fnd_eta, lapParam, varsigma, outL, 0);
-			write_options.set(OpenMesh::IO::Options::VertexColor); 
 			if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 				std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 			}
@@ -8637,7 +8640,6 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 							iter_step, UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColor?"PC":"_", UsePointColorDiff?"PCD":"_", 
 							UseFaceColorDiff?"FCD":"_", UseFaceNormalDiff?"FND":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_", 
 							fidParam, m_beta, penParam, regParam, pcParam, pcd_eta, fcd_eta, fnd_eta, lapParam, varsigma, outL, iteration);
-						write_options.set(OpenMesh::IO::Options::VertexColor); 
 						if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 							std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 						}
@@ -8814,7 +8816,6 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 		UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColor?"PC":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_",
 		UseFaceNormalDiff?"FND":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_",
 		fidParam, m_beta, penParam, regParam, pcParam, pcd_eta, fcd_eta, fnd_eta, lapParam, varsigma);
-	write_options.set(OpenMesh::IO::Options::VertexColor); 
 	if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 		std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 	}

@@ -230,6 +230,10 @@ public:
 				name.substr(name.find_last_of("-")+1) == "al") {
 					int temp; ifstr >> temp; AnisotropicLaplace = temp>0 ? true:false; 
 			}
+			if (name.substr(name.find_last_of("-")+1) == "RCO" ||
+				name.substr(name.find_last_of("-")+1) == "reo") {
+					int temp; ifstr >> temp; RecordColor = temp>0 ? true:false; 
+			}
 		}
 		ifstr.close();
 		return true;
@@ -275,6 +279,7 @@ public:
 	bool	UseMatlabSolver;
 	bool	ScaleDelta;
 	bool	AnisotropicLaplace;
+	bool	RecordColor;
 };
 
 extern ModelingOptions MOptions;
@@ -439,6 +444,10 @@ void ParseParam(int argc, char* argv[], ModelingOptions &options)
 		if (opt == "AL" || opt == "al") {
 			int temp = atoi(param.c_str());
 			options.AnisotropicLaplace	= temp>0?true:false;	i++;
+		}
+		if (opt == "RCO" || opt == "rco") {
+			int temp = atoi(param.c_str());
+			options.RecordColor	= temp>0?true:false;	i++;
 		}
 
 		if (opt == "h" || opt == "help") {

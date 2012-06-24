@@ -54,6 +54,7 @@ typedef OpenMesh::TriMesh_ArrayKernelT<MyMeshTraits>  MyMesh;
 extern Engine *m_ep;
 extern bool ScaleDelta;
 extern bool AnisotropicLaplace;
+extern bool RecordColor;
 
 class TriangularMesh  
 {
