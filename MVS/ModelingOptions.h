@@ -94,9 +94,10 @@ public:
 		UseFaceArea			= false;
 
 		UseFittedColor		= false;
-		UseMatlabSolver		= true;
+		UseMatlabSolver		= false;
 		ScaleDelta			= true;
-		AnisotropicLaplace	= true;
+		AnisotropicLaplace	= false;
+		RecordColor			= false;
 	};
 	bool ReadOptionFile(const char* optionfilename) {
 		//Initialization from the input file name

@@ -8926,7 +8926,8 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 	bool UseFaceNormalDiff = fnd_eta?true:false;		bool UseLaplace = (lapParam>0)?true:false;
 	// construct the jacobian matrix according to the new model
 	int dimension = UsePositionFidelity*m_vnum*3 + UsePointLightDiff*T_Mesh.n_edges()*3 + UsePointColor*m_vnum + 
-		UsePointColorDiff*T_Mesh.n_edges() + UseFaceColorDiff*T_Mesh.n_edges() + UseFaceNormalDiff*T_Mesh.n_edges()*3 + UseLaplace*m_vnum*3 + UseTVNorm*m_trinum*9 + UseTVU*m_trinum*9;
+		UsePointColorDiff*T_Mesh.n_edges() + UseFaceColorDiff*T_Mesh.n_edges() + UseFaceNormalDiff*T_Mesh.n_edges()*3 + 
+		UseLaplace*m_vnum*3 + UseTVNorm*m_trinum*9 + UseTVU*m_trinum*9;
 	mat_J.resize(dimension, m_vnum*3+m_vnum*3); mat_f.resize(dimension, 1);
 	gmm::scale(mat_J, 0.0);				gmm::scale(mat_f, 0.0);
 	double fid_scale = sqrt(fidParam*0.5), beta_scale = sqrt(m_beta*0.5),  pcd_scale = sqrt(pcd_eta*0.5), fcd_scale = sqrt(fcd_eta*0.5), pen_scale = sqrt(penParam*0.5);
@@ -8962,20 +8963,45 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 		//	mat_f(vertex_id*3+1+Start_id, 0) += area_scale*beta_scale*(T_Mesh.normal(v_it).data()[1] - m_vertices[vertex_id].ps_normal_y);
 		//	mat_f(vertex_id*3+2+Start_id, 0) += area_scale*beta_scale*(T_Mesh.normal(v_it).data()[2] - m_vertices[vertex_id].ps_normal_z);
 		//}
+		double max_omega = 1, min_omega = 0;
+		max_omega = -1; min_omega = 10000;
+		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
+			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();
+			int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx();
+			double omegaij = std::exp(-pow((m_vertices[iid].intensity - m_vertices[jid].intensity), 2.0)/varsigma);
+#ifdef TEST_MESHREFINE
+			OpenMesh::Vec3f psni(m_vertices[iid].ps_normal_x,m_vertices[iid].ps_normal_y,m_vertices[iid].ps_normal_z);
+			OpenMesh::Vec3f psnj(m_vertices[jid].ps_normal_x,m_vertices[jid].ps_normal_y,m_vertices[jid].ps_normal_z);
+			omegaij = std::exp(-(psni-psnj).norm());
+#endif
+			if (omegaij < min_omega) {
+				min_omega = omegaij;
+			}
+			if (omegaij > max_omega) {
+				max_omega = omegaij;
+			}
+		}
 		gmm::linalg_traits< gmm::wsvector<double> >::const_iterator it, ite;
 		T_Mesh.update_face_normals();T_Mesh.update_vertex_normals();
 		//the light of neighbor points should be the same
 		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
 			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();		
 			int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx(); 
+			double omegaij = std::exp(-pow((m_vertices[iid].intensity - m_vertices[jid].intensity), 2.0)/varsigma);
+			omegaij = (omegaij-min_omega)/(max_omega-min_omega);
+#ifdef TEST_MESHREFINE
+			OpenMesh::Vec3f psni(m_vertices[iid].ps_normal_x,m_vertices[iid].ps_normal_y,m_vertices[iid].ps_normal_z);
+			OpenMesh::Vec3f psnj(m_vertices[jid].ps_normal_x,m_vertices[jid].ps_normal_y,m_vertices[jid].ps_normal_z);
+			omegaij = (std::exp(-(psni-psnj).norm()) - min_omega)/(max_omega - min_omega);
+#endif
 			OpenMesh::Vec3f i_light = OpenMesh::Vec3f(m_vertices[iid].light_x,m_vertices[iid].light_y,m_vertices[iid].light_z);
 			OpenMesh::Vec3f j_light = OpenMesh::Vec3f(m_vertices[jid].light_x,m_vertices[jid].light_y,m_vertices[jid].light_z);
 
 			int edge_id = e_it.handle().idx();												double area_scale = UseFaceArea?sqrt(m_vertices[iid].BCDArea):1.0;
 			for (int k = 0; k < 3; ++ k) {
-				mat_J(edge_id*3+k+Start_id, iid+m_vnum*k+m_vnum*3) += area_scale*beta_scale*1.0;
-				mat_J(edge_id*3+k+Start_id, jid+m_vnum*k+m_vnum*3) -= area_scale*beta_scale*1.0;
-				mat_f(edge_id*3+k+Start_id, 0) += area_scale*beta_scale*(i_light[k] - j_light[k]);
+				mat_J(edge_id*3+k+Start_id, iid+m_vnum*k+m_vnum*3) += area_scale*beta_scale*sqrt(omegaij)*1.0;
+				mat_J(edge_id*3+k+Start_id, jid+m_vnum*k+m_vnum*3) -= area_scale*beta_scale*sqrt(omegaij)*1.0;
+				mat_f(edge_id*3+k+Start_id, 0) += area_scale*beta_scale*sqrt(omegaij)*(i_light[k] - j_light[k]);
 			}
 		}
 		Start_id += T_Mesh.n_edges()*3;
@@ -9001,7 +9027,6 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 	
 	if (UsePointColorDiff) {
 		// the normal difference term, eta*\omega_ij\|n_i - n_j\|^2
-
 //		double max_omega = 1, min_omega = 0;
 //		max_omega = -1; min_omega = 10000;
 //		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
@@ -9057,11 +9082,11 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 			for (int k = 0; k < 3; k++) {
 				for (it = vect_const_begin(gmm::mat_const_row(gradJ, iid*3+k)); it != vect_const_end(gmm::mat_const_row(gradJ, iid*3+k)); ++ it) {
 					mat_J(e_it.handle().idx()+Start_id, it.index()) += area_scale*pcd_scale*i_light[k]*gradJ(iid*3+k, it.index());
-				}	mat_J(e_it.handle().idx()+Start_id, iid+k*m_vnum+3*m_vnum) += area_scale*pcd_scale*T_Mesh.normal(MyMesh::VertexHandle(iid))[k];
+				}	mat_J(e_it.handle().idx()+Start_id, iid+m_vnum*k+m_vnum*3) += area_scale*pcd_scale*T_Mesh.normal(MyMesh::VertexHandle(iid))[k];
 
 				for (it = vect_const_begin(gmm::mat_const_row(gradJ, jid*3+k)); it != vect_const_end(gmm::mat_const_row(gradJ, jid*3+k)); ++ it) {
 					mat_J(e_it.handle().idx()+Start_id, it.index()) -= area_scale*pcd_scale*j_light[k]*gradJ(jid*3+k, it.index());
-				}	mat_J(e_it.handle().idx()+Start_id, jid+k*m_vnum+3*m_vnum) -= area_scale*pcd_scale*T_Mesh.normal(MyMesh::VertexHandle(jid))[k];
+				}	mat_J(e_it.handle().idx()+Start_id, jid+m_vnum*k+m_vnum*3) -= area_scale*pcd_scale*T_Mesh.normal(MyMesh::VertexHandle(jid))[k];
 			}
 			mat_f(e_it.handle().idx()+Start_id, 0) += area_scale*pcd_scale*
 				( OpenMesh::dot(i_light, T_Mesh.normal(MyMesh::VertexHandle(iid))) - OpenMesh::dot(j_light, T_Mesh.normal(MyMesh::VertexHandle(jid))) - 
