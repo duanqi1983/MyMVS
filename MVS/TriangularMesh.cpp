@@ -8328,11 +8328,32 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 		uz[v_it.handle().idx()] = T_Mesh.point(v_it.handle()).data()[2];
 		m_vertices[v_it.handle().idx()].light_x = m_vertices[v_it.handle().idx()].light_y = m_vertices[v_it.handle().idx()].light_z = 0.0;
 	}
+	if (UseTVNorm) {
+		T_Mesh.update_face_normals();  T_Mesh.update_vertex_normals();
+		for (MyMesh::VertexIter v_it = T_Mesh.vertices_begin(); v_it != T_Mesh.vertices_end(); ++ v_it) { 
+			nux[v_it.handle().idx()] = T_Mesh.normal(v_it.handle()).data()[0];
+			nuy[v_it.handle().idx()] = T_Mesh.normal(v_it.handle()).data()[1];
+			nuz[v_it.handle().idx()] = T_Mesh.normal(v_it.handle()).data()[2];
+		}
+		GetPPIGradients (m_vnum,nux);
+		GetPPIGradients1(m_vnum,nuy);
+		GetPPIGradients2(m_vnum,nuz);
+	} 
+	if (UseTVU) {
+		for (MyMesh::VertexIter v_it = T_Mesh.vertices_begin(); v_it != T_Mesh.vertices_end(); ++ v_it) {
+			ux[v_it.handle().idx()] = T_Mesh.point(v_it.handle())[0];
+			uy[v_it.handle().idx()] = T_Mesh.point(v_it.handle())[1];
+			uz[v_it.handle().idx()] = T_Mesh.point(v_it.handle())[2];
+		}
+		GetPPIGradients (nver,ux);
+		GetPPIGradients1(nver,uy);
+		GetPPIGradients2(nver,uz);
+	}
 	for(int i=0;i<ntri;i++)
 	{
-		px[i].x=0; lambda_x[i].x=0;		px[i].y=0; lambda_x[i].y=0;		px[i].z=0; lambda_x[i].z=0;
-		py[i].x=0; lambda_y[i].x=0;		py[i].y=0; lambda_y[i].y=0;		py[i].z=0; lambda_y[i].z=0;
-		pz[i].x=0; lambda_z[i].x=0;		pz[i].y=0; lambda_z[i].y=0;		pz[i].z=0; lambda_z[i].z=0;
+		px[i].x=m_triangles[i].grad.x;	lambda_x[i].x=0;	px[i].y=m_triangles[i].grad.y;	lambda_x[i].y=0;	px[i].z=m_triangles[i].grad.z;	lambda_x[i].z=0;
+		py[i].x=m_triangles[i].grad1.x; lambda_y[i].x=0;	py[i].y=m_triangles[i].grad1.y; lambda_y[i].y=0;	py[i].z=m_triangles[i].grad1.z; lambda_y[i].z=0;
+		pz[i].x=m_triangles[i].grad2.x; lambda_z[i].x=0;	pz[i].y=m_triangles[i].grad2.y; lambda_z[i].y=0;	pz[i].z=m_triangles[i].grad2.z; lambda_z[i].z=0;
 	}
 	vector<vector<double>> energy_result; energy_result.clear();
 	vector<double> vec_n_energy; vec_n_energy.resize(m_vnum); 
@@ -8418,10 +8439,10 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 			if (UseTVU) {
 				cout << " TVU: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
 			}
-			sprintf(buffer, "Results\\LMResults\\%sLMResult%d%s%s%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f_%d_%d.off", meshname.c_str(), iter_step, 
-				UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColor?"PC":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_", UseFaceNormalDiff?"FND":"_",
-				UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_", 
-				fidParam, m_beta, penParam, regParam, pcParam, pcd_eta, fcd_eta, fnd_eta, lapParam, varsigma, outL, 0);
+			sprintf(buffer, "Results\\LMResults\\%sLMResult%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s_%d_%d.off", meshname.c_str(), iter_step, 
+				UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"LDF":"_", m_beta, UsePointColor?"PC":"_", pcParam, UsePointColorDiff?"PCD":"_", pcd_eta, 
+				UseFaceColorDiff?"FCD":"_", fcd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
+				UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", penParam, regParam, varsigma, UseFaceArea?"FA":"_", outL, 0);
 			if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 				std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 			}
@@ -8636,10 +8657,10 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 						//cout << " = " << 0.5*penParam*CalculateVTVEnergy(T_Mesh, ux, uy, uz,UseFaceArea);
 					}
 					if (iteration%1 == 0) {
-						sprintf(buffer, "Results\\LMResults\\%sLMResult%d%s%s%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f_%d_%d.off", meshname.c_str(),
-							iter_step, UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColor?"PC":"_", UsePointColorDiff?"PCD":"_", 
-							UseFaceColorDiff?"FCD":"_", UseFaceNormalDiff?"FND":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_", 
-							fidParam, m_beta, penParam, regParam, pcParam, pcd_eta, fcd_eta, fnd_eta, lapParam, varsigma, outL, iteration);
+						sprintf(buffer, "Results\\LMResults\\%sLMResult%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s_%d_%d.off", meshname.c_str(), iter_step, 
+							UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"LDF":"_", m_beta, UsePointColor?"PC":"_", pcParam, UsePointColorDiff?"PCD":"_", pcd_eta, 
+							UseFaceColorDiff?"FCD":"_", fcd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
+							UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", penParam, regParam, varsigma, UseFaceArea?"FA":"_", outL, iteration);
 						if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 							std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 						}
@@ -8667,25 +8688,18 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 					}
 				}
 			}
-			sprintf(buffer, "Results\\LMResults\\%sLMResult_Final%d%s%s%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f_%d.off", meshname.c_str(),
-				iter_step, UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColor?"PC":"_", UsePointColorDiff?"PCD":"_", 
-				UseFaceColorDiff?"FCD":"_", UseFaceNormalDiff?"FND":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_", 
-				fidParam, m_beta, penParam, regParam, pcParam, pcd_eta, fcd_eta, fnd_eta, lapParam, varsigma, outL);
-			if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
-				std::cerr << "Cannot write mesh to file " << buffer << std::endl;
-			}
 			if (!(UseTVU||UseTVNorm)) {
-				sprintf(buffer, "Results\\ALM_%sResult_Final%d%s%s%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f.off", meshname.c_str(), iter_step, 
-					UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColor?"PC":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_",
-					UseFaceNormalDiff?"FND":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_",
-					fidParam, m_beta, penParam, regParam, pcParam, pcd_eta, fcd_eta, fnd_eta, lapParam, varsigma);
+				sprintf(buffer, "Results\\ALM_%sResult_Final%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s.off", meshname.c_str(), iter_step, 
+					UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"LDF":"_", m_beta, UsePointColor?"PC":"_", pcParam, UsePointColorDiff?"PCD":"_", pcd_eta, 
+					UseFaceColorDiff?"FCD":"_", fcd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
+					UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", penParam, regParam, varsigma, UseFaceArea?"FA":"_");
 				if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 					std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 				}
-				sprintf(buffer, "Results\\%sEnergyResult%d%s%s%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f.txt", meshname.c_str(), iter_step, 
-					UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColor?"PC":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_",
-					UseFaceNormalDiff?"FND":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_",
-					fidParam, m_beta, penParam, regParam, pcParam, pcd_eta, fcd_eta, fnd_eta, lapParam, varsigma);
+				sprintf(buffer, "Results\\%sEnergyResult%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s.off", meshname.c_str(), iter_step, 
+					UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"LDF":"_", m_beta, UsePointColor?"PC":"_", pcParam, UsePointColorDiff?"PCD":"_", pcd_eta, 
+					UseFaceColorDiff?"FCD":"_", fcd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
+					UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", penParam, regParam, varsigma, UseFaceArea?"FA":"_");
 				fstream nof(buffer,std::ios::out);
 				if (!nof) {
 					cout << "Can not open "<<buffer<<" to save data..." << endl;
@@ -8812,17 +8826,17 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 		m_vertices[i].x = ux[i]; m_vertices[i].y = uy[i]; m_vertices[i].z = uz[i];
 		m_vertices[i].ref_x = ux[i]; m_vertices[i].ref_y = uy[i]; m_vertices[i].ref_z = uz[i];
 	}
-	sprintf(buffer, "Results\\ALM_%sResult_Final%d%s%s%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f.off", meshname.c_str(), iter_step, 
-		UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColor?"PC":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_",
-		UseFaceNormalDiff?"FND":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_",
-		fidParam, m_beta, penParam, regParam, pcParam, pcd_eta, fcd_eta, fnd_eta, lapParam, varsigma);
+	sprintf(buffer, "Results\\ALM_%sResult_Final%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s.off", meshname.c_str(), iter_step, 
+		UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"LDF":"_", m_beta, UsePointColor?"PC":"_", pcParam, UsePointColorDiff?"PCD":"_", pcd_eta, 
+		UseFaceColorDiff?"FCD":"_", fcd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
+		UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", penParam, regParam, varsigma, UseFaceArea?"FA":"_");
 	if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 		std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 	}
-	sprintf(buffer, "Results\\%sEnergyResult%d%s%s%s%s%s%s%s%s%s%s_%.0f_%.0f_%.5f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f_%.0f.txt", meshname.c_str(), iter_step, 
-		UsePositionFidelity?"Fid":"_", UsePointLightDiff?"LDF":"_", UsePointColor?"PC":"_", UsePointColorDiff?"PCD":"_", UseFaceColorDiff?"FCD":"_",
-		UseFaceNormalDiff?"FND":"_", UseLaplace?"Lap":"_", UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", UseFaceArea?"FA":"_", 
-		fidParam, m_beta, penParam, regParam, pcParam, pcd_eta, fcd_eta, fnd_eta, lapParam, varsigma);
+	sprintf(buffer, "Results\\%sEnergyResult%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s.off", meshname.c_str(), iter_step, 
+		UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"LDF":"_", m_beta, UsePointColor?"PC":"_", pcParam, UsePointColorDiff?"PCD":"_", pcd_eta, 
+		UseFaceColorDiff?"FCD":"_", fcd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
+		UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", penParam, regParam, varsigma, UseFaceArea?"FA":"_");
 	fstream nof(buffer,std::ios::out);
 	if (!nof) {
 		cout << "Can not open "<<buffer<<" to save data..." << endl;
@@ -8963,32 +8977,32 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 		//	mat_f(vertex_id*3+1+Start_id, 0) += area_scale*beta_scale*(T_Mesh.normal(v_it).data()[1] - m_vertices[vertex_id].ps_normal_y);
 		//	mat_f(vertex_id*3+2+Start_id, 0) += area_scale*beta_scale*(T_Mesh.normal(v_it).data()[2] - m_vertices[vertex_id].ps_normal_z);
 		//}
-		double max_omega = 1, min_omega = 0;
-		max_omega = -1; min_omega = 10000;
-		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
-			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();
-			int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx();
-			double omegaij = std::exp(-pow((m_vertices[iid].intensity - m_vertices[jid].intensity), 2.0)/varsigma);
-#ifdef TEST_MESHREFINE
-			OpenMesh::Vec3f psni(m_vertices[iid].ps_normal_x,m_vertices[iid].ps_normal_y,m_vertices[iid].ps_normal_z);
-			OpenMesh::Vec3f psnj(m_vertices[jid].ps_normal_x,m_vertices[jid].ps_normal_y,m_vertices[jid].ps_normal_z);
-			omegaij = std::exp(-(psni-psnj).norm());
-#endif
-			if (omegaij < min_omega) {
-				min_omega = omegaij;
-			}
-			if (omegaij > max_omega) {
-				max_omega = omegaij;
-			}
-		}
+//		double max_omega = 1, min_omega = 0;
+//		max_omega = -1; min_omega = 10000;
+//		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
+//			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();
+//			int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx();
+//			double omegaij = std::exp(-pow((m_vertices[iid].intensity - m_vertices[jid].intensity), 2.0)/varsigma);
+//#ifdef TEST_MESHREFINE
+//			OpenMesh::Vec3f psni(m_vertices[iid].ps_normal_x,m_vertices[iid].ps_normal_y,m_vertices[iid].ps_normal_z);
+//			OpenMesh::Vec3f psnj(m_vertices[jid].ps_normal_x,m_vertices[jid].ps_normal_y,m_vertices[jid].ps_normal_z);
+//			omegaij = std::exp(-(psni-psnj).norm());
+//#endif
+//			if (omegaij < min_omega) {
+//				min_omega = omegaij;
+//			}
+//			if (omegaij > max_omega) {
+//				max_omega = omegaij;
+//			}
+//		}
 		gmm::linalg_traits< gmm::wsvector<double> >::const_iterator it, ite;
 		T_Mesh.update_face_normals();T_Mesh.update_vertex_normals();
 		//the light of neighbor points should be the same
 		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
 			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();		
 			int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx(); 
-			double omegaij = std::exp(-pow((m_vertices[iid].intensity - m_vertices[jid].intensity), 2.0)/varsigma);
-			omegaij = (omegaij-min_omega)/(max_omega-min_omega);
+			double omegaij = 1.0;//std::exp(-pow((m_vertices[iid].intensity - m_vertices[jid].intensity), 2.0)/varsigma);
+			//omegaij = (omegaij-min_omega)/(max_omega-min_omega);
 #ifdef TEST_MESHREFINE
 			OpenMesh::Vec3f psni(m_vertices[iid].ps_normal_x,m_vertices[iid].ps_normal_y,m_vertices[iid].ps_normal_z);
 			OpenMesh::Vec3f psnj(m_vertices[jid].ps_normal_x,m_vertices[jid].ps_normal_y,m_vertices[jid].ps_normal_z);
