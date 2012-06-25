@@ -77,13 +77,14 @@ public:
 		pld_eta				= 0;
 		pcd_eta				= 0;
 		fcd_eta				= 0;
+		pnd_eta				= 0;
 		fnd_eta				= 0;
 		varsigma			= 20;
 		ALM_TVNorm			= false;
 		ALM_TVU				= false;
 		penParam			= 0.01;
 		regParam			= 1.0;
-		pcParam				= 0.0;
+		pc_eta				= 0.0;
 		lapParam			= 0;
 
 		Is_Matched			= true;
@@ -176,19 +177,23 @@ public:
 			}
 			if (name.substr(name.find_last_of("-")+1) == "PC" ||
 				name.substr(name.find_last_of("-")+1) == "pc") {
-					ifstr >> pcParam; 
+					ifstr >> pc_eta; 
+			}
+			if (name.substr(name.find_last_of("-")+1) == "PCD" ||
+				name.substr(name.find_last_of("-")+1) == "pcd") {
+					ifstr >> pcd_eta; 
 			}
 			if (name.substr(name.find_last_of("-")+1) == "FCD" ||
 				name.substr(name.find_last_of("-")+1) == "fcd") {
 					ifstr >> fcd_eta; 
 			}
+			if (name.substr(name.find_last_of("-")+1) == "PND" ||
+				name.substr(name.find_last_of("-")+1) == "pnd") {
+					ifstr >> pnd_eta; 
+			}
 			if (name.substr(name.find_last_of("-")+1) == "FND" ||
 				name.substr(name.find_last_of("-")+1) == "fnd") {
 					ifstr >> fnd_eta; 
-			}
-			if (name.substr(name.find_last_of("-")+1) == "PCD" ||
-				name.substr(name.find_last_of("-")+1) == "pcd") {
-					ifstr >> pcd_eta; 
 			}
 			if (name.substr(name.find_last_of("-")+1) == "VAR" ||
 				name.substr(name.find_last_of("-")+1) == "var") {
@@ -260,13 +265,14 @@ public:
 	double	pld_eta;
 	double	pcd_eta;
 	double	fcd_eta;
+	double	pnd_eta;
 	double	fnd_eta;
 	double	varsigma;
 	bool	ALM_TVNorm;
 	bool	ALM_TVU;
 	double	penParam;
 	double	regParam;
-	double	pcParam;
+	double	pc_eta;
 	double  lapParam;
 
 	bool	Is_Matched;
@@ -398,16 +404,19 @@ void ParseParam(int argc, char* argv[], ModelingOptions &options)
 			options.pld_eta	= atof(param.c_str());	i++;
 		}
 		if (opt == "PC" || opt == "pc") {
-			options.pcParam	= atof(param.c_str());	i++;
+			options.pc_eta	= atof(param.c_str());	i++;
+		}
+		if (opt == "PCD" || opt == "pcd") {
+			options.pcd_eta	= atof(param.c_str());	i++;
 		}
 		if (opt == "FCD" || opt == "fcd") {
 			options.fcd_eta	= atof(param.c_str());	i++;
 		}
+		if (opt == "PND" || opt == "pnd") {
+			options.pnd_eta	= atof(param.c_str());	i++;
+		}
 		if (opt == "FND" || opt == "fnd") {
 			options.fnd_eta	= atof(param.c_str());	i++;
-		}
-		if (opt == "PCD" || opt == "pcd") {
-			options.pcd_eta	= atof(param.c_str());	i++;
 		}
 		if (opt == "VAR" || opt == "var") {
 			options.varsigma	= atof(param.c_str());	i++;
