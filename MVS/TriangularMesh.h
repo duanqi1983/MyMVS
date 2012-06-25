@@ -348,9 +348,9 @@ public:
 	bool UpdateVertexWeight(double m_sigma);
 	bool LoadPSNormalFile(const char* filename);
 
-	void ALM_TVU_MeshRefinement(string meshname, double fidParam, double m_beta, double pcd_eta, double fcd_eta, double fnd_eta, double varsigma, double pcParam, double penParam, double regParam, double lapParam, bool UseTVU, bool UseTVNorm, int iter_step, bool UseFaceArea, bool UseMatlabSolver);
+	void ALM_TVU_MeshRefinement(string meshname, double fidParam, double pld_eta, double pcd_eta, double fcd_eta, double fnd_eta, double varsigma, double pcParam, double penParam, double regParam, double lapParam, bool UseTVU, bool UseTVNorm, int iter_step, bool UseFaceArea, bool UseMatlabSolver);
 	void TV_JacobianMatrix_Construction(MyMesh& T_mesh, RowSparseMatrix& mat_J, DenseMatrix& mat_f, 
-		double fidParam, double m_beta, double pcd_eta, double fcd_eta, double fnd_eta, double varsigma, double pcParam, double penParam, double lapParam,
+		double fidParam, double pld_eta, double pcd_eta, double fcd_eta, double fnd_eta, double varsigma, double pcParam, double penParam, double lapParam,
 		vector<VECTOR3D> &px, vector<VECTOR3D> &py, vector<VECTOR3D> &pz, vector<VECTOR3D> &lambda_x, vector<VECTOR3D> &lambda_y, vector<VECTOR3D> &lambda_z, bool UseTVU, bool UseTVNorm, bool UseFaceArea);
 	void CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& energy, bool UsePositionFidelity, bool UsePointLightDiff, bool UsePointColor, bool UsePointColorDiff, bool UseFaceColorDiff, bool UseFaceNormalDiff, bool UseLaplace, bool UseTVNorm, bool UseTVU);
 

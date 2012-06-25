@@ -74,7 +74,7 @@ public:
 		fitting_choice		= 0;
 
 		fidParam			= 0;
-		m_beta				= 0;
+		pld_eta				= 0;
 		pcd_eta				= 0;
 		fcd_eta				= 0;
 		fnd_eta				= 0;
@@ -170,9 +170,9 @@ public:
 				name.substr(name.find_last_of("-")+1) == "fid") {
 					ifstr >> fidParam;
 			}
-			if (name.substr(name.find_last_of("-")+1) == "BETA" ||
-				name.substr(name.find_last_of("-")+1) == "beta") {
-					ifstr >> m_beta;
+			if (name.substr(name.find_last_of("-")+1) == "PLD" ||
+				name.substr(name.find_last_of("-")+1) == "pld") {
+					ifstr >> pld_eta;
 			}
 			if (name.substr(name.find_last_of("-")+1) == "PC" ||
 				name.substr(name.find_last_of("-")+1) == "pc") {
@@ -257,7 +257,7 @@ public:
 	string	meshname;
 
 	double	fidParam;
-	double	m_beta;
+	double	pld_eta;
 	double	pcd_eta;
 	double	fcd_eta;
 	double	fnd_eta;
@@ -394,8 +394,8 @@ void ParseParam(int argc, char* argv[], ModelingOptions &options)
 		if (opt == "FID" || opt == "fid") {
 			options.fidParam	= atof(param.c_str());	i++;
 		}
-		if (opt == "BETA" || opt == "beta") {
-			options.m_beta	= atof(param.c_str());	i++;
+		if (opt == "PLD" || opt == "pld") {
+			options.pld_eta	= atof(param.c_str());	i++;
 		}
 		if (opt == "PC" || opt == "pc") {
 			options.pcParam	= atof(param.c_str());	i++;
