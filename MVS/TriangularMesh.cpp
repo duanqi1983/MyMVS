@@ -8313,13 +8313,14 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 	}
 	T_Mesh.request_face_normals();		T_Mesh.update_face_normals();
 	T_Mesh.request_vertex_normals();	T_Mesh.update_vertex_normals();
-	bool UsePositionFidelity = fidParam>0?true:false;	bool UsePointLightDiff = (pld_eta>0)?true:false;	bool UseLaplace = (lapParam>0)?true:false; 
+	bool UsePositionFidelity = fidParam>0?true:false;	bool UsePointLightDiff = (pld_eta>0)?true:false;	
 	bool UsePointColor = pc_eta>0?true:false;			bool UsePointColorDiff = pcd_eta>0?true:false;		bool UseFaceColorDiff = fcd_eta>0?true:false;
-	bool UsePointNormalDiff = pnd_eta>0?true:false;		bool UseFaceNormalDiff = fnd_eta>0?true:false;
+	bool UsePointNormalDiff = pnd_eta>0?true:false;		bool UseFaceNormalDiff = fnd_eta>0?true:false;		bool UseLaplace = (lapParam>0)?true:false; 
 	cout << endl << "Start the mesh refinement process: ";		UsePositionFidelity?cout<<"Pfid "<<fidParam<<" ":cout<<" ";
-	UsePointLightDiff?cout<<"Ldiff "<<pld_eta<<" ":cout<<" ";	UseLaplace?cout<<"Lap "<<lapParam<<" ":cout<<" ";
-	UsePointColor?cout<<"PCol "<<pc_eta<<" ":cout<<" ";			UsePointNormalDiff?cout<<"PND "<<pnd_eta<<" ":cout<<" ";		UseFaceNormalDiff?cout<<"FND "<<fnd_eta<<" ":cout<<" ";
+	UsePointLightDiff?cout<<"Pld "<<pld_eta<<" ":cout<<" ";		UsePointColor?cout<<"PCol "<<pc_eta<<" ":cout<<" ";	
 	UsePointColorDiff?cout<<"PCdiff "<<pcd_eta<<" ":cout<<" ";	UseFaceColorDiff?cout<<"FCdiff "<<fcd_eta<<" ":cout<<" "; 
+	UsePointNormalDiff?cout<<"PND "<<pnd_eta<<" ":cout<<" ";	UseFaceNormalDiff?cout<<"FND "<<fnd_eta<<" ":cout<<" ";	
+	UseLaplace?cout<<"Lap "<<lapParam<<" ":cout<<" ";
 	UseTVU?cout<<"TVU "<<penParam<<" ":cout<<" ";				UseTVNorm?cout<<"TVNorm "<<penParam<<" ":cout<<" ";cout << endl;
 
 	for (MyMesh::VertexIter v_it = T_Mesh.vertices_begin(); v_it != T_Mesh.vertices_end(); ++ v_it) {
@@ -8402,55 +8403,19 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 				px, py, pz, lambda_x, lambda_y, lambda_z, UseTVU, UseTVNorm, UseFaceArea);
 
 			eOld = gmm::mat_euclidean_norm_sqr(m_f);
-
-			vector<double> t_energy; t_energy.clear(); 
-			CalculateEnergyTerm(m_f, t_energy, UsePositionFidelity, UsePointLightDiff, UsePointColor, UsePointColorDiff, UseFaceColorDiff, UsePointNormalDiff, UseFaceNormalDiff, UseLaplace, UseTVNorm, UseTVU);
-			total_energy = 0.0;
-			for (int k = 0; k < t_energy.size(); ++ k) {
-				total_energy += t_energy[k];
-			}
-			t_energy.push_back(total_energy);			energy_result.push_back(t_energy); 
-			cout << "00: Sum: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[t_energy.size()-1];// << " = " << eOld;
-			int eidx = 0;
-			if (UsePositionFidelity) {
-				cout << " UFID: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++]; 
-			}
-			if (UsePointLightDiff) {
-				cout << " PLD: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-			}
-			if (UsePointColor) {
-				cout << " PCOL: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-			}
-			if (UsePointColorDiff) {
-				cout << " PCDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-			}
-			if (UseFaceColorDiff) {
-				cout << " FCDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-			}
-			if (UsePointNormalDiff) {
-				cout << " PNDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-			}
-			if (UseFaceNormalDiff) {
-				cout << " FNDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-			}
-			if (UseLaplace) {
-				cout << " LAP: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-			}
-			if (UseTVNorm) {
-				cout << " TVN: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-			} 
-			if (UseTVU) {
-				cout << " TVU: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-			}
-			sprintf(buffer, "Results\\LMResults\\%sLMResult%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s_%d_%d.off", meshname.c_str(), iter_step, 
-				UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"PLD":"_", pld_eta, UsePointColor?"PC":"_", pc_eta, UsePointColorDiff?"PCD":"_", pcd_eta, 
-				UseFaceColorDiff?"FCD":"_", fcd_eta, UsePointNormalDiff?"PND":"_", pnd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
+			vector<double> t_energy; t_energy.clear(); cout <<"00:";
+			CalculateEnergyTerm(m_f, t_energy, UsePositionFidelity, UsePointLightDiff, UsePointColor, UsePointColorDiff, UseFaceColorDiff, 
+				UsePointNormalDiff, UseFaceNormalDiff, UseLaplace, UseTVNorm, UseTVU);		energy_result.push_back(t_energy); 
+			sprintf(buffer, "Results\\LMResults\\%sLMResult%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s_%d_%d.off", 
+				meshname.c_str(), iter_step, UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"PLD":"_", pld_eta, 
+				UsePointColor?"PC":"_", pc_eta, UsePointColorDiff?"PCD":"_", pcd_eta, UseFaceColorDiff?"FCD":"_", fcd_eta, 
+				UsePointNormalDiff?"PND":"_", pnd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
 				UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", penParam, regParam, varsigma, UseFaceArea?"FA":"_", outL, 0);
 			if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 				std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 			}
 
-			RowSparseMatrix mat_JTJ(dimension, dimension);
+			RowSparseMatrix mat_JTJ(dimension, dimension);  RowSparseMatrix mat_A(dimension, dimension);
 			gmm::mult(gmm::transposed(mat_J), mat_J, mat_JTJ);
 			for (int i = 0; i < dimension; i++) {
 				tau[i] = mat_JTJ(i, i);
@@ -8463,7 +8428,7 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 			numc::SparseSolver solver;	double *b = new double[dimension];	double *vx = new double[dimension];
 			int iteration = 0; int maxStep = 30;
 			if (UseTVU || UseTVNorm) {
-				maxStep = 20;
+				maxStep = ceil(maxStep/2.0);
 			}
 			while (iteration++ < maxStep) {
 				sprintf(buffer, "%.2d:", iteration);
@@ -8471,12 +8436,13 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 				if (normG < epsilon1) {
 					break;
 				}
+				gmm::copy(mat_JTJ, mat_A);
 				for (int i = 0; i < dimension; i++) {
-					mat_JTJ(i, i) += tau[i];
+					mat_A(i, i) += tau[i];
 				}
 
 				if (UseMatlabSolver) {
-					gmm::copy(gmm::transposed(mat_JTJ), JtJ);
+					gmm::copy(gmm::transposed(mat_A), JtJ);
 					engEvalString( m_ep, "clear all;" );
 					int nnz= gmm::nnz(JtJ);
 					mxArray* arrayA=mxCreateSparse(JtJ.nrows(),JtJ.ncols(),nnz,mxREAL);
@@ -8524,12 +8490,12 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 				else {
 					// solve mat_A*m_x = m_b
 					numc::RowMat<double> RM_A(dimension, dimension); int r = 0;
-					for (gmm::linalg_traits<RowSparseMatrix>::row_iterator rIt = gmm::linalg_traits<RowSparseMatrix>::row_begin(mat_JTJ);
-						rIt != gmm::linalg_traits<RowSparseMatrix>::row_end(mat_JTJ); ++ rIt, ++ r) {
+					for (gmm::linalg_traits<RowSparseMatrix>::row_iterator rIt = gmm::linalg_traits<RowSparseMatrix>::row_begin(mat_A);
+						rIt != gmm::linalg_traits<RowSparseMatrix>::row_end(mat_A); ++ rIt, ++ r) {
 							gmm::linalg_traits< gmm::wsvector<double> >::const_iterator it = vect_const_begin(*rIt);
 							gmm::linalg_traits< gmm::wsvector<double> >::const_iterator ite = vect_const_end(*rIt);
 							for (; it != ite; ++ it) {
-								RM_A(r, it.index()) = mat_JTJ(r, it.index());
+								RM_A(r, it.index()) = mat_A(r, it.index());
 							}
 							b[r] = m_b[r];
 					}
@@ -8587,8 +8553,8 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 					eNew = gmm::mat_euclidean_norm_sqr(m_f); 
 
 					vector<double> t_energy; t_energy.clear(); 
-					CalculateEnergyTerm(m_f, t_energy, UsePositionFidelity, UsePointLightDiff, UsePointColor, UsePointColorDiff, UseFaceColorDiff, UsePointNormalDiff, UseFaceNormalDiff, UseLaplace, UseTVNorm, UseTVU);
-
+					CalculateEnergyTerm(m_f, t_energy, UsePositionFidelity, UsePointLightDiff, UsePointColor, UsePointColorDiff, UseFaceColorDiff, 
+						UsePointNormalDiff, UseFaceNormalDiff, UseLaplace, UseTVNorm, UseTVU);		energy_result.push_back(t_energy); 
 					//v_energy = UseFidelity?CalculateVEnergy(T_Mesh,UseFaceArea):0.0;				t_energy.push_back(0.5*fidParam*v_energy);
 					//n_energy = UseGDN?CalculateNEnergy(T_Mesh, vec_n_energy,UseFaceArea):0.0;		t_energy.push_back(0.5*pld_eta*n_energy); 
 					//ndp_energy = UsePointND?CalculateNDPEnergy(T_Mesh, varsigma,UseFaceArea):0.0;	t_energy.push_back(0.5*pcd_eta*ndp_energy);
@@ -8612,67 +8578,28 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 					//	}
 					//	tv_energy = CalculateVTVEnergy(T_Mesh, ux, uy, uz,UseFaceArea);				t_energy.push_back(0.5*penParam*tv_energy);
 					//}
-					total_energy = 0.0;
-					for (int k = 0; k < t_energy.size(); ++ k) {
-						total_energy += t_energy[k];
-					}
-					t_energy.push_back(total_energy);			energy_result.push_back(t_energy); 
-					cout << " Sum: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[t_energy.size()-1];// << " = " << eNew; 
-					int eidx = 0;
-					if (UsePositionFidelity) {
-						cout << " UFID: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-					}
-					if (UsePointLightDiff) {
-						cout << " PLD: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-					}
-					if (UsePointColor) {
-						cout << " PCOL: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-					}
-					if (UsePointColorDiff) {
-						cout << " PCDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-					}
-					if (UseFaceColorDiff) {
-						cout << " FCDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-					}	
-					if (UsePointNormalDiff) {
-						cout << " PNDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-					}		
-					if (UseFaceNormalDiff) {
-						cout << " FNDF: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-					}				
-					if (UseLaplace) {
-						cout << " LAP: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-					}
-					if (UseTVNorm) {
-						cout << " TVN: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-						//T_Mesh.update_face_normals();  T_Mesh.update_vertex_normals();
-						//for (MyMesh::VertexIter v_it = T_Mesh.vertices_begin(); v_it != T_Mesh.vertices_end(); ++ v_it) { 
-						//	nux[v_it.handle().idx()] = T_Mesh.normal(v_it.handle()).data()[0];
-						//	nuy[v_it.handle().idx()] = T_Mesh.normal(v_it.handle()).data()[1];
-						//	nuz[v_it.handle().idx()] = T_Mesh.normal(v_it.handle()).data()[2];
-						//}
-						//cout << " = " << 0.5*penParam*CalculateVTVNormEnergy(T_Mesh, nux, nuy, nuz,UseFaceArea);
-					} 
-					if (UseTVU) {
-						cout << " TVU: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< t_energy[eidx++];
-						//for (MyMesh::VertexIter v_it = T_Mesh.vertices_begin(); v_it != T_Mesh.vertices_end(); ++ v_it) { 
-						//	ux[v_it.handle().idx()] = T_Mesh.point(v_it.handle()).data()[0];
-						//	uy[v_it.handle().idx()] = T_Mesh.point(v_it.handle()).data()[1];
-						//	uz[v_it.handle().idx()] = T_Mesh.point(v_it.handle()).data()[2];
-						//}
-						//cout << " = " << 0.5*penParam*CalculateVTVEnergy(T_Mesh, ux, uy, uz,UseFaceArea);
-					}
 					if (iteration%1 == 0) {
-						sprintf(buffer, "Results\\LMResults\\%sLMResult%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s_%d_%d.off", meshname.c_str(), iter_step, 
-							UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"PLD":"_", pld_eta, UsePointColor?"PC":"_", pc_eta, UsePointColorDiff?"PCD":"_", pcd_eta, 
-							UseFaceColorDiff?"FCD":"_", fcd_eta, UsePointNormalDiff?"PND":"_", pnd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
+						sprintf(buffer, "Results\\LMResults\\%sLMResult%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s_%d_%d.off", 
+							meshname.c_str(), iter_step, UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"PLD":"_", pld_eta, 
+							UsePointColor?"PC":"_", pc_eta, UsePointColorDiff?"PCD":"_", pcd_eta, UseFaceColorDiff?"FCD":"_", fcd_eta, 
+							UsePointNormalDiff?"PND":"_", pnd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
 							UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", penParam, regParam, varsigma, UseFaceArea?"FA":"_", outL, iteration);
 						if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 							std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 						}
+						sprintf(buffer, "Results\\LMResults\\%sLMResult%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s_%d_%d.txt", 
+							meshname.c_str(), iter_step, UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"PLD":"_", pld_eta, 
+							UsePointColor?"PC":"_", pc_eta, UsePointColorDiff?"PCD":"_", pcd_eta, UseFaceColorDiff?"FCD":"_", fcd_eta, 
+							UsePointNormalDiff?"PND":"_", pnd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
+							UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", penParam, regParam, varsigma, UseFaceArea?"FA":"_", outL, iteration);
+						fstream fout(buffer,ios::out);
+						for (int i=0;i<m_vnum;++i) {
+							fout<<m_vertices[i].light_x<<", "<<m_vertices[i].light_y<<", "<<m_vertices[i].light_z<<endl;
+						}
+						fout.close();
 					}
 
-					sigma = (eOld - eNew)/(l0h+1.0e-12);
+					sigma = (eOld - eNew)/(l0h);
 					if (sigma >= 0) {
 						gmm::scale(tau, std::max(1./3., 1. - pow(2.*sigma - 1., 3.)));
 						var = 2.0;
@@ -8695,16 +8622,18 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 				}
 			}
 			if (!(UseTVU||UseTVNorm)) {
-				sprintf(buffer, "Results\\ALM_%sResult_Final%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s.off", meshname.c_str(), iter_step, 
-					UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"PLD":"_", pld_eta, UsePointColor?"PC":"_", pc_eta, UsePointColorDiff?"PCD":"_", pcd_eta, 
-					UseFaceColorDiff?"FCD":"_", fcd_eta, UsePointNormalDiff?"PND":"_", pnd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
+				sprintf(buffer, "Results\\ALM_%sResult_Final%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s.off", 
+					meshname.c_str(), iter_step,  UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"PLD":"_", pld_eta, 
+					UsePointColor?"PC":"_", pc_eta, UsePointColorDiff?"PCD":"_", pcd_eta, UseFaceColorDiff?"FCD":"_", fcd_eta, 
+					UsePointNormalDiff?"PND":"_", pnd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
 					UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", penParam, regParam, varsigma, UseFaceArea?"FA":"_");
 				if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 					std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 				}
-				sprintf(buffer, "Results\\%sEnergyResult%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s.off", meshname.c_str(), iter_step, 
-					UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"PLD":"_", pld_eta, UsePointColor?"PC":"_", pc_eta, UsePointColorDiff?"PCD":"_", pcd_eta, 
-					UseFaceColorDiff?"FCD":"_", fcd_eta, UsePointNormalDiff?"PND":"_", pnd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
+				sprintf(buffer, "Results\\%sEnergyResult%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s.off", 
+					meshname.c_str(), iter_step, UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"PLD":"_", pld_eta, 
+					UsePointColor?"PC":"_", pc_eta, UsePointColorDiff?"PCD":"_", pcd_eta, UseFaceColorDiff?"FCD":"_", fcd_eta, 
+					UsePointNormalDiff?"PND":"_", pnd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
 					UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", penParam, regParam, varsigma, UseFaceArea?"FA":"_");
 				fstream nof(buffer,std::ios::out);
 				if (!nof) {
@@ -8832,16 +8761,18 @@ void TriangularMesh::ALM_TVU_MeshRefinement(string meshname, double fidParam, do
 		m_vertices[i].x = ux[i]; m_vertices[i].y = uy[i]; m_vertices[i].z = uz[i];
 		m_vertices[i].ref_x = ux[i]; m_vertices[i].ref_y = uy[i]; m_vertices[i].ref_z = uz[i];
 	}
-	sprintf(buffer, "Results\\ALM_%sResult_Final%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s.off", meshname.c_str(), iter_step, 
-		UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"PLD":"_", pld_eta, UsePointColor?"PC":"_", pc_eta, UsePointColorDiff?"PCD":"_", pcd_eta, 
-		UseFaceColorDiff?"FCD":"_", fcd_eta, UsePointNormalDiff?"PND":"_", pnd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
+	sprintf(buffer, "Results\\ALM_%sResult_Final%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s.off", 
+		meshname.c_str(), iter_step, UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"PLD":"_", pld_eta, 
+		UsePointColor?"PC":"_", pc_eta, UsePointColorDiff?"PCD":"_", pcd_eta, UseFaceColorDiff?"FCD":"_", fcd_eta, 
+		UsePointNormalDiff?"PND":"_", pnd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
 		UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", penParam, regParam, varsigma, UseFaceArea?"FA":"_");
 	if ( !OpenMesh::IO::write_mesh(T_Mesh, string(buffer), write_options) ) {
 		std::cerr << "Cannot write mesh to file " << buffer << std::endl;
 	}
-	sprintf(buffer, "Results\\%sEnergyResult%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s.off", meshname.c_str(), iter_step, 
-		UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"PLD":"_", pld_eta, UsePointColor?"PC":"_", pc_eta, UsePointColorDiff?"PCD":"_", pcd_eta, 
-		UseFaceColorDiff?"FCD":"_", fcd_eta, UsePointNormalDiff?"PND":"_", pnd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
+	sprintf(buffer, "Results\\%sEnergyResult%d_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%.0f_%s%s%.5f_%.0f_%.0f_%s.off", 
+		meshname.c_str(), iter_step, UsePositionFidelity?"Fid":"_", fidParam, UsePointLightDiff?"PLD":"_", pld_eta, 
+		UsePointColor?"PC":"_", pc_eta, UsePointColorDiff?"PCD":"_", pcd_eta, UseFaceColorDiff?"FCD":"_", fcd_eta, 
+		UsePointNormalDiff?"PND":"_", pnd_eta, UseFaceNormalDiff?"FND":"_", fnd_eta, UseLaplace?"Lap":"_", lapParam, 
 		UseTVU?"TVU":"_",UseTVNorm?"TVNorm":"_", penParam, regParam, varsigma, UseFaceArea?"FA":"_");
 	fstream nof(buffer,std::ios::out);
 	if (!nof) {
@@ -8867,6 +8798,7 @@ void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& ener
 		for (int i = 0; i < m_vnum*3; ++i) {
 			temp(i,0) = mat_f(Start_id+i,0);
 		}
+		cout << " UFID: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< gmm::mat_euclidean_norm_sqr(temp); 
 		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
 		Start_id += m_vnum*3;
 	}
@@ -8875,6 +8807,7 @@ void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& ener
 		for (int i = 0; i < this->m_ObjTriMesh.n_edges()*3; ++i) {
 			temp(i,0) = mat_f(Start_id+i,0);
 		}
+		cout << " PLD: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< gmm::mat_euclidean_norm_sqr(temp);
 		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
 		Start_id += this->m_ObjTriMesh.n_edges()*3;
 	}
@@ -8883,6 +8816,7 @@ void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& ener
 		for (int i = 0; i < m_vnum; ++i) {
 			temp(i,0) = mat_f(Start_id+i,0);
 		}
+		cout << " PCOL: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< gmm::mat_euclidean_norm_sqr(temp);
 		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
 		Start_id += m_vnum;
 	}
@@ -8891,6 +8825,7 @@ void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& ener
 		for (int i = 0; i < this->m_ObjTriMesh.n_edges(); ++i) {
 			temp(i,0) = mat_f(Start_id+i,0);
 		}
+		cout << " PCD: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< gmm::mat_euclidean_norm_sqr(temp);
 		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
 		Start_id += this->m_ObjTriMesh.n_edges();
 	}
@@ -8899,6 +8834,7 @@ void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& ener
 		for (int i = 0; i < this->m_ObjTriMesh.n_edges(); ++i) {
 			temp(i,0) = mat_f(Start_id+i,0);
 		}
+		cout << " FCD: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< gmm::mat_euclidean_norm_sqr(temp);
 		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
 		Start_id += this->m_ObjTriMesh.n_edges();
 	}
@@ -8907,6 +8843,7 @@ void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& ener
 		for (int i = 0; i < this->m_ObjTriMesh.n_edges()*3; ++i) {
 			temp(i,0) = mat_f(Start_id+i,0);
 		}
+		cout << " PND: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< gmm::mat_euclidean_norm_sqr(temp);
 		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
 		Start_id += this->m_ObjTriMesh.n_edges()*3;
 	}
@@ -8915,6 +8852,7 @@ void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& ener
 		for (int i = 0; i < this->m_ObjTriMesh.n_edges()*3; ++i) {
 			temp(i,0) = mat_f(Start_id+i,0);
 		}
+		cout << " FND: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< gmm::mat_euclidean_norm_sqr(temp);
 		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
 		Start_id += this->m_ObjTriMesh.n_edges()*3;
 	}
@@ -8923,6 +8861,7 @@ void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& ener
 		for (int i = 0; i < m_vnum*3; ++i) {
 			temp(i,0) = mat_f(Start_id+i,0);
 		}
+		cout << " LAP: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< gmm::mat_euclidean_norm_sqr(temp);
 		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
 		Start_id += m_vnum*3;
 	}
@@ -8931,6 +8870,7 @@ void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& ener
 		for (int i = 0; i < m_trinum*9; ++i) {
 			temp(i,0) = mat_f(Start_id+i,0);
 		}
+		cout << " TVN: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< gmm::mat_euclidean_norm_sqr(temp);
 		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
 		Start_id += UseTVNorm*m_trinum*9;
 	}
@@ -8939,9 +8879,16 @@ void TriangularMesh::CalculateEnergyTerm(DenseMatrix mat_f, vector<double>& ener
 		for (int i = 0; i < m_trinum*9; ++i) {
 			temp(i,0) = mat_f(Start_id+i,0);
 		}
+		cout << " TVU: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< gmm::mat_euclidean_norm_sqr(temp);
 		energy.push_back(gmm::mat_euclidean_norm_sqr(temp));
 		Start_id += UseTVNorm*m_trinum*9;
 	}
+	double total_energy = 0.0;
+	for (int k = 0; k < energy.size(); ++ k) {
+		total_energy += energy[k];
+	}
+	energy.push_back(total_energy);
+	cout << " Sum: " <<setprecision(6)<<setw(6)<<setiosflags(ios::left)<< energy[energy.size()-1];
 }
 
 void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMatrix& mat_J, DenseMatrix& mat_f, double fidParam, double pld_eta, 
@@ -8959,8 +8906,9 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 		UseLaplace*m_vnum*3 + UseTVNorm*m_trinum*9 + UseTVU*m_trinum*9;
 	mat_J.resize(dimension, m_vnum*3+m_vnum*3); mat_f.resize(dimension, 1);
 	gmm::scale(mat_J, 0.0);				gmm::scale(mat_f, 0.0);
-	double fid_scale = sqrt(fidParam*0.5), beta_scale = sqrt(pld_eta*0.5),  pcd_scale = sqrt(pcd_eta*0.5),	fcd_scale = sqrt(fcd_eta*0.5), pen_scale = sqrt(penParam*0.5);
-	double lap_scale = sqrt(lapParam*0.5), pc_scale = sqrt(pc_eta*0.5),	pnd_scale = sqrt(pnd_eta*0.5),	fnd_scale = sqrt(fnd_eta*0.5);
+	double fid_scale = sqrt(fidParam*0.5), pld_scale = sqrt(pld_eta*0.5),	pcd_scale = sqrt(pcd_eta*0.5),	fcd_scale = sqrt(fcd_eta*0.5), 
+		   pen_scale = sqrt(penParam*0.5), lap_scale = sqrt(lapParam*0.5),	pnd_scale = sqrt(pnd_eta*0.5),	fnd_scale = sqrt(fnd_eta*0.5),		
+		   pc_scale = sqrt(pc_eta*0.5);
 
 	RowSparseMatrix gradJ; std::vector<double> grad_f;
 	this->LM_JacobianMatrix_Construction(T_Mesh, gradJ, grad_f, 0);
@@ -9013,7 +8961,7 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 		gmm::linalg_traits< gmm::wsvector<double> >::const_iterator it, ite;
 		//the light of neighbor points should be the same
 		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
-			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();		
+			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();
 			int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx(); 
 			double omegaij = 1.0;//std::exp(-pow((m_vertices[iid].intensity - m_vertices[jid].intensity), 2.0)/varsigma);
 			//omegaij = (omegaij-min_omega)/(max_omega-min_omega);
@@ -9027,9 +8975,9 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 
 			int edge_id = e_it.handle().idx();												double area_scale = UseFaceArea?sqrt(m_vertices[iid].BCDArea):1.0;
 			for (int k = 0; k < 3; ++ k) {
-				mat_J(edge_id*3+k+Start_id, iid+m_vnum*k+m_vnum*3) += area_scale*beta_scale*sqrt(omegaij)*1.0;
-				mat_J(edge_id*3+k+Start_id, jid+m_vnum*k+m_vnum*3) -= area_scale*beta_scale*sqrt(omegaij)*1.0;
-				mat_f(edge_id*3+k+Start_id, 0) += area_scale*beta_scale*sqrt(omegaij)*(i_light[k] - j_light[k]);
+				mat_J(edge_id*3+k+Start_id, iid+m_vnum*k+m_vnum*3) += area_scale*pld_scale*sqrt(omegaij)*1.0;
+				mat_J(edge_id*3+k+Start_id, jid+m_vnum*k+m_vnum*3) -= area_scale*pld_scale*sqrt(omegaij)*1.0;
+				mat_f(edge_id*3+k+Start_id, 0) += area_scale*pld_scale*sqrt(omegaij)*(i_light[k] - j_light[k]);
 			}
 		}
 		Start_id += T_Mesh.n_edges()*3;
@@ -9118,7 +9066,7 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 				}	mat_J(e_it.handle().idx()+Start_id, jid+m_vnum*k+m_vnum*3) -= area_scale*pcd_scale*T_Mesh.normal(MyMesh::VertexHandle(jid))[k];
 			}
 			mat_f(e_it.handle().idx()+Start_id, 0) += area_scale*pcd_scale*
-				( OpenMesh::dot(i_light, T_Mesh.normal(MyMesh::VertexHandle(iid))) - OpenMesh::dot(j_light, T_Mesh.normal(MyMesh::VertexHandle(jid))) - 
+				( (OpenMesh::dot(i_light, T_Mesh.normal(MyMesh::VertexHandle(iid))) - OpenMesh::dot(j_light, T_Mesh.normal(MyMesh::VertexHandle(jid)))) - 
 					(m_vertices[iid].intensity - m_vertices[jid].intensity) );
 		}
 		Start_id += T_Mesh.n_edges();
