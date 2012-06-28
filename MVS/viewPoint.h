@@ -220,9 +220,9 @@ public:
 
 	void readSilhouette(const char *name)
 	{		
-		maskName = string(name);
 		if (name!=NULL && FileExisted(name))
 		{
+			maskName = string(name);
 			//printf("Read mask file: %s\n",name);
 			cv::Mat silImage = cv::Mat(cvLoadImage(name,0));
 			double back_color = silImage.at<unsigned char>(1,1);

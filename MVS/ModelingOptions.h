@@ -97,7 +97,7 @@ public:
 		UseFittedColor		= false;
 		UseMatlabSolver		= false;
 		ScaleDelta			= true;
-		AnisotropicLaplace	= false;
+		AnisotropicLaplace	= true;
 		RecordColor			= false;
 	};
 	bool ReadOptionFile(const char* optionfilename) {

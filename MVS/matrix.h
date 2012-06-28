@@ -140,12 +140,24 @@ inline double dotProduct(const float *a, double *b, int size)
 	return res;
 }
 
+inline double dotProduct(const float *a, const float *b, int size)
+{
+	double res = 0;
+	for (int i=0; i<size; i++) res+= a[i]*b[i];
+	return res;
+}
+
 inline double calAngle(double *a, double *b)
 {	
 	return acos(dotProduct(a,b,3)) * DEGREE;
 }
 
 inline double calAngle(const float *a, double *b)
+{	
+	return acos(dotProduct(a,b,3)) * DEGREE;
+}
+
+inline double calAngle(const float *a, const float *b)
 {	
 	return acos(dotProduct(a,b,3)) * DEGREE;
 }

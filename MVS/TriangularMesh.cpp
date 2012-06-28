@@ -9379,8 +9379,9 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 
 	if (UseLaplace) {
 		if (AnisotropicLaplace) {
+			double CValue = 50; // according to cvpr paper, to set the weight for anisotropic laplacian term
 			for (MyMesh::VertexIter v_it = T_Mesh.vertices_begin(); v_it != T_Mesh.vertices_end(); ++ v_it) {
-				int vertex_id = v_it.handle().idx();										double area_scale = UseFaceArea?sqrt(m_vertices[vertex_id].BCDArea):1.0;
+				int vertex_id = v_it.handle().idx();									double area_scale = UseFaceArea?sqrt(m_vertices[vertex_id].BCDArea):1.0;
 				//add the laplacian term for singularity mesh
 				double degree = 0.0, avg_color = 0.0, sum_weight = 0.0; 
 				for (MyMesh::ConstVertexVertexIter vv_it = T_Mesh.cvv_iter(v_it); vv_it; ++vv_it) {
@@ -9410,25 +9411,24 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 					double cotaij = OpenMesh::dot(pPi-pPk1, pPj-pPk1)/OpenMesh::cross(pPi-pPk1, pPj-pPk1).norm();
 					double cotbij = OpenMesh::dot(pPi-pPk2, pPj-pPk2)/OpenMesh::cross(pPi-pPk2, pPj-pPk2).norm();
 
-					double col_edge_weight = 1 - min(abs(m_vertices[iid].intensity - m_vertices[jid].intensity), varsigma)/varsigma;
+					double col_edge_weight = 1 - min(abs(m_vertices[iid].intensity - m_vertices[jid].intensity), CValue)/CValue;
 					double lap_edge_weight = (cotaij+cotbij)/(2.0*m_vertices[vertex_id].Voronoi_Area);
 
-					avg_nei_point += pPj*(col_edge_weight*lap_edge_weight+epsilon);
-					nei_weight.push_back(col_edge_weight*lap_edge_weight+epsilon);	sum_weight += col_edge_weight*lap_edge_weight+epsilon;
-				} avg_nei_point = avg_nei_point/sum_weight;
+					avg_nei_point += pPj*(col_edge_weight*lap_edge_weight);
+					nei_weight.push_back(col_edge_weight*lap_edge_weight);	sum_weight += col_edge_weight*lap_edge_weight;
+				} 
 
 				for (int k = 0; k < 3; ++ k) {
-					int i = 0;		mat_J(vertex_id*3+k+Start_id, vertex_id+m_vnum*k) += area_scale*lap_scale*out_weight; 
+					int i = 0;		mat_J(vertex_id*3+k+Start_id, vertex_id+m_vnum*k) += area_scale*lap_scale*out_weight*sum_weight; 
 					for (MyMesh::VertexEdgeIter ve_it = T_Mesh.ve_iter(v_it); ve_it; ++ ve_it, ++ i) {
 						int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(ve_it,0)).idx();
 						int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(ve_it,1)).idx();
 						if (iid != vertex_id) { // jid = vertex_id
 							jid = iid; iid = vertex_id;
 						}
-						mat_J(vertex_id*3+k+Start_id, jid+m_vnum*k) += -area_scale*lap_scale*out_weight*nei_weight[i]/sum_weight;
+						mat_J(vertex_id*3+k+Start_id, jid+m_vnum*k) -= area_scale*lap_scale*out_weight*nei_weight[i];
 					}
-
-					mat_f(vertex_id*3+k+Start_id, 0) += area_scale*lap_scale*out_weight*(T_Mesh.point(v_it.handle()).data()[k] - avg_nei_point[k]);
+					mat_f(vertex_id*3+k+Start_id, 0) += area_scale*lap_scale*out_weight*(T_Mesh.point(v_it.handle()).data()[k]*sum_weight - avg_nei_point[k]);
 				}
 			}
 		} else {
@@ -9439,18 +9439,18 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 				for (MyMesh::ConstVertexVertexIter vv_it = T_Mesh.cvv_iter(v_it); vv_it; ++vv_it) {
 					degree++;	avg_color += m_vertices[vv_it.handle().idx()].intensity; 
 
-					double col_edge_weight = 1.0;
+					double col_edge_weight = exp(-pow(m_vertices[v_it.handle().idx()].intensity - m_vertices[vv_it.handle().idx()].intensity,2.0)/varsigma);
 					avg_nei_point += T_Mesh.point(vv_it.handle())*col_edge_weight;
 					nei_weight.push_back(col_edge_weight);	sum_weight += col_edge_weight;
-				} avg_nei_point = avg_nei_point/(sum_weight+epsilon); avg_color = avg_color/degree;
+				} avg_color = avg_color/degree;
 
-				double out_weight = exp(-pow(m_vertices[v_it.handle().idx()].intensity - avg_color,2.0)/varsigma) + epsilon;
+				double out_weight = exp(-pow(m_vertices[v_it.handle().idx()].intensity - avg_color,2.0)/varsigma);
 				for (int k = 0; k < 3; ++ k) {
-					int i = 0;		mat_J(vertex_id*3+k+Start_id, vertex_id+m_vnum*k) += area_scale*lap_scale*out_weight; 
+					int i = 0;		mat_J(vertex_id*3+k+Start_id, vertex_id+m_vnum*k) += area_scale*lap_scale*out_weight*sum_weight; 
 					for (MyMesh::ConstVertexVertexIter vv_it = T_Mesh.cvv_iter(v_it); vv_it; ++vv_it, ++ i) {
-						mat_J(vertex_id*3+k+Start_id, vv_it.handle().idx()+m_vnum*k) += -area_scale*lap_scale*out_weight*nei_weight[i]/(sum_weight+epsilon);
+						mat_J(vertex_id*3+k+Start_id, vv_it.handle().idx()+m_vnum*k) -= area_scale*lap_scale*out_weight*nei_weight[i];
 					}
-					mat_f(vertex_id*3+k+Start_id, 0) += area_scale*lap_scale*out_weight*(T_Mesh.point(v_it.handle()).data()[k] - avg_nei_point[k]);
+					mat_f(vertex_id*3+k+Start_id, 0) += area_scale*lap_scale*out_weight*(T_Mesh.point(v_it.handle()).data()[k]*sum_weight - avg_nei_point[k]);
 				}
 			}
 		}
@@ -12753,7 +12753,7 @@ void TriangularMesh::CalculateVertexVoronoiArea()
 				++cfv_it;
 			}  int k2id = cfv_it.handle().idx();
 
-			OpenMesh::Vec3f pPi = m_ObjTriMesh.point(MyMesh::VertexHandle(iid)), pPj = m_ObjTriMesh.point(MyMesh::VertexHandle(jid));
+			OpenMesh::Vec3f pPi  = m_ObjTriMesh.point(MyMesh::VertexHandle(iid)),  pPj  = m_ObjTriMesh.point(MyMesh::VertexHandle(jid));
 			OpenMesh::Vec3f pPk1 = m_ObjTriMesh.point(MyMesh::VertexHandle(k1id)), pPk2 = m_ObjTriMesh.point(MyMesh::VertexHandle(k2id));
 			double cotaij = OpenMesh::dot(pPi-pPk1, pPj-pPk1)/OpenMesh::cross(pPi-pPk1, pPj-pPk1).norm();
 			double cotbij = OpenMesh::dot(pPi-pPk2, pPj-pPk2)/OpenMesh::cross(pPi-pPk2, pPj-pPk2).norm();

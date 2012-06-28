@@ -1978,6 +1978,202 @@ bool CubicSplineFittingData(const char* datafilename, const char* outsplinefilen
 	return false;
 }
 
+bool PointInsideTriangle(int* P, int* A, int* B, int* C)
+{
+	double epsilon = 0.0001;
+	double AB_A = (B[0]-A[0])/(A[1]-B[1]+epsilon), AB_C = -(A[0]+AB_A*A[1]);
+	double BC_A = (C[0]-B[0])/(B[1]-C[1]+epsilon), BC_C = -(B[0]+BC_A*B[1]);
+	double AC_A = (C[0]-A[0])/(A[1]-C[1]+epsilon), AC_C = -(A[0]+AC_A*A[1]);
+	double PAJudge = (P[0]+BC_A*P[1]+BC_C)*(A[0]+BC_A*A[1]+BC_C); // judge the result of both P and A to line BC
+	double PBJudge = (P[0]+AC_A*P[1]+AC_C)*(B[0]+AC_A*B[1]+AC_C); // judge the result of both P and B to line AC
+	double PCJudge = (P[0]+AB_A*P[1]+AB_C)*(C[0]+AB_A*C[1]+AB_C); // judge the result of both P and C to line AB
+	int num_zero = 0, num_pos = 0, num_neg = 0;
+	PAJudge>0?num_pos++:(PAJudge==0?num_zero++:num_neg++);
+	PBJudge>0?num_pos++:(PBJudge==0?num_zero++:num_neg++);
+	PCJudge>0?num_pos++:(PCJudge==0?num_zero++:num_neg++);
+	if (num_neg == 0) {
+		return true;
+	} else if (num_zero == 2) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool CalculateVertexVisibleToViewPoint(const char* resultfile)
+{
+	//calculate the visible result of each vertex to viewpoint
+	ObjTriMesh.request_face_normals(); ObjTriMesh.update_face_normals();
+	vector< vector<int> > vertex_visible_view; vertex_visible_view.resize(ObjTriMesh.n_vertices());
+	for (int i = 0; i < ObjTriMesh.n_vertices(); ++i) {
+		vertex_visible_view[i].clear();
+	}
+	vector< vector<int> > visible_fid; vector< vector<double> > nr_distance; double ox[2];
+	for (int idx = 0; idx < nViews; ++ idx) {
+		OpenMesh::Vec3f Camera_center(listViewPoints[idx]->C[0], listViewPoints[idx]->C[1], listViewPoints[idx]->C[2]);
+		if (visible_fid.size() != listViewPoints[idx]->height) {
+			visible_fid.resize(listViewPoints[idx]->height);			nr_distance.resize(listViewPoints[idx]->height);
+		}
+		for (int j = 0; j < listViewPoints[idx]->height; ++j) {
+			if (visible_fid[j].size() != listViewPoints[idx]->width) {
+				visible_fid[j].resize(listViewPoints[idx]->width);	nr_distance[j].resize(listViewPoints[idx]->width);
+			}
+			for (int k = 0; k < listViewPoints[idx]->width; ++k) {
+				visible_fid[j][k] = -1; nr_distance[j][k] = 1.0e10;
+			}
+		} // end of initialization
+
+		//cv::Mat silImage; silImage.create(listViewPoints[idx]->height, listViewPoints[idx]->width, CV_8UC1); silImage.setTo(0);
+		//int temp_count = 0;
+		for (MyMesh::FaceIter f_it = ObjTriMesh.faces_begin(); f_it != ObjTriMesh.faces_end(); ++ f_it) {
+			MyMesh::ConstFaceVertexIter cfv_it = ObjTriMesh.cfv_iter(f_it);  int A[2], B[2], C[2], P[2];
+			OpenMesh::Vec3f p1 = ObjTriMesh.point(cfv_it); ++cfv_it;
+			matrixProject(p1.data(), listViewPoints[idx]->P,ox,1); int ph1 = (int)(ox[0]+0.5); int pw1 = (int)(ox[1]+0.5);	A[1] = ph1; A[0] = pw1;
+			double dis1 = (Camera_center - p1).length();
+			OpenMesh::Vec3f p2 = ObjTriMesh.point(cfv_it); ++cfv_it;
+			matrixProject(p2.data(), listViewPoints[idx]->P,ox,1); int ph2 = (int)(ox[0]+0.5); int pw2 = (int)(ox[1]+0.5);	B[1] = ph2; B[0] = pw2;
+			double dis2 = (Camera_center - p2).length();
+			OpenMesh::Vec3f p3 = ObjTriMesh.point(cfv_it);
+			matrixProject(p3.data(), listViewPoints[idx]->P,ox,1); int ph3 = (int)(ox[0]+0.5); int pw3 = (int)(ox[1]+0.5);	C[1] = ph3; C[0] = pw3;
+			double dis3 = (Camera_center - p3).length();
+			double avg_dis = min(min(dis1,dis2),dis3);	int visible_flag = true;  
+			int max_ph = max(max(ph1, ph2), ph3); int max_pw = max(max(pw1, pw2), pw3);
+			int min_ph = min(min(ph1, ph2), ph3); int min_pw = min(min(pw1, pw2), pw3);
+
+			if (OpenMesh::dot(ObjTriMesh.normal(f_it), Camera_center - p1)<0) {
+				continue;
+			}
+
+			for (int h = max(1,min_ph-1); h <= min(max_ph+1, listViewPoints[idx]->height-1); ++ h) {
+				for (int w = max(1,min_pw-1); w <= min(max_pw+1, listViewPoints[idx]->width-1); ++ w) {
+					P[1] = h; P[0] = w;
+					if (PointInsideTriangle(P, A, B, C)) {
+						if (nr_distance[h][w] > avg_dis) {
+							nr_distance[h][w] = avg_dis;
+							visible_fid[h][w] = f_it.handle().idx();
+							//silImage.at<unsigned char>(h,w) = 255;
+						}
+					}
+				}
+			}
+		} //end of visible result calculation of vertex to one viewpoint
+		//imwrite("test2.png", silImage);
+
+		for (int h = 0; h < visible_fid.size(); ++ h) {
+			for (int w = 0; w < visible_fid[h].size(); ++ w) {
+				int fid = visible_fid[h][w];
+				if (fid != -1) {
+					MyMesh::ConstFaceVertexIter cfv_it = ObjTriMesh.cfv_iter(MyMesh::FaceHandle(fid));
+					int ida = cfv_it.handle().idx(); ++cfv_it;
+					int idb = cfv_it.handle().idx(); ++cfv_it;
+					int idc = cfv_it.handle().idx();
+					if (vertex_visible_view[ida].size() < 1 || (vertex_visible_view[ida].size() > 0&&vertex_visible_view[ida][vertex_visible_view[ida].size()-1] != idx)) {
+						vertex_visible_view[ida].push_back(idx);
+					}
+					if (vertex_visible_view[idb].size() < 1 || (vertex_visible_view[idb].size() > 0&&vertex_visible_view[idb][vertex_visible_view[idb].size()-1] != idx)) {
+						vertex_visible_view[idb].push_back(idx);
+					}
+					if (vertex_visible_view[idc].size() < 1 || (vertex_visible_view[idc].size() > 0&&vertex_visible_view[idc][vertex_visible_view[idc].size()-1] != idx)) {
+						vertex_visible_view[idc].push_back(idx);
+					}
+				}
+			}
+		}//record the visible viewpoint result to vertex	
+	}
+
+	fstream fout(resultfile, ios::out);
+	if (!fout) {
+		cout << "Can not open " << resultfile << " to save result." << endl;
+		return false;
+	}
+	for (int i = 0; i < vertex_visible_view.size(); ++ i) {
+		fout << vertex_visible_view[i].size()<<" ";
+		for (int j = 0; j < vertex_visible_view[i].size(); ++ j) {
+			fout << vertex_visible_view[i][j] << " ";
+		}
+		fout << endl;
+	}
+	fout.close();
+ 	return true;
+}
+
+
+bool UpdateMeshVertexIntensity(const char* vertexvisiblefile, const char* vertexintensityfilename)
+{
+	//load pre-calculate vertex visible viewpoint result
+	vector< vector<int> > vertex_visible_view; vertex_visible_view.resize(ObjTriMesh.n_vertices());
+	for (int i = 0; i < ObjTriMesh.n_vertices(); ++i) {
+		vertex_visible_view[i].clear();
+	}
+	fstream fin(vertexvisiblefile, ios::in);
+	if (!fin) {
+		cout << "Can not open " << vertexvisiblefile << " to load result." << endl;
+		return false;
+	}
+	int num, view_id;
+	for (int i = 0; i < ObjTriMesh.n_vertices(); ++ i) {
+		fin >> num;
+		for (int j = 0; j < num; ++ j) {
+			fin>>view_id; vertex_visible_view[i].push_back(view_id);
+		}
+	}
+	fin.close();
+
+	ObjTriMesh.update_face_normals(); ObjTriMesh.update_vertex_normals();
+	vector<double> vec_z1, vec_z2, vec_weight; int nocolor_point_num = 0;
+	double ox[2], cur_view_direction[3]; int temp_count; double temp_color, nx, ny, nz, z1, z2, vertex_weight;
+	//construct the initial normal/light matrix, to learn their relationship
+	Vertex_Color_List.clear(); Vertex_Color_List.resize(ObjTriMesh.n_vertices());  
+	vec_z1.clear(); vec_z1.resize(ObjTriMesh.n_vertices());	vec_z2.clear(); vec_z2.resize(ObjTriMesh.n_vertices()); 
+	vec_weight.clear(); vec_weight.resize(ObjTriMesh.n_vertices());
+	std::list< pair<double, pair<int, double> > > tVectexIntensityList;
+	for (MyMesh::VertexIter v_it = ObjTriMesh.vertices_begin();v_it != ObjTriMesh.vertices_end(); ++v_it) {
+		tVectexIntensityList.clear();	int vertex_idx = v_it.handle().idx();
+		for (int i = 0; i < vertex_visible_view[vertex_idx].size(); ++ i) {
+			int view_id = vertex_visible_view[vertex_idx][i];
+			OpenMesh::Vec3f Camera_center(listViewPoints[view_id]->C[0], listViewPoints[view_id]->C[1], listViewPoints[view_id]->C[2]);
+			OpenMesh::Vec3f View_vector = Camera_center - ObjTriMesh.point(v_it);
+			if (OpenMesh::dot(ObjTriMesh.normal(v_it), View_vector)>0) {
+				double output_angle = calAngle(ObjTriMesh.normal(v_it).data(), View_vector.data());
+				matrixProject(ObjTriMesh.point(v_it).data(), listViewPoints[view_id]->P,ox,1);
+				pair<int, double> tpair = pair<int, double>(view_id, CV_IMAGE_ELEM(listViewPoints[view_id]->image, uchar,(int)(ox[0]+0.5),(int)(ox[1]+0.5)));
+				tVectexIntensityList.push_back(make_pair(output_angle, tpair));
+			}
+		}
+		if (tVectexIntensityList.size() < 1) {
+			//cout<< "The vertex can not find any visible color." << endl;
+			nocolor_point_num ++;
+			vec_z1[vertex_idx] = z1;		vec_z2[vertex_idx] = z2;
+			Vertex_Color_List[vertex_idx] = -1;
+			continue;
+		}
+		tVectexIntensityList.sort(MyDataSortPredicate);
+		toSpherical(ObjTriMesh.normal(v_it).data()[0], ObjTriMesh.normal(v_it).data()[1], ObjTriMesh.normal(v_it).data()[2], &z1, &z2);
+		std::list< pair<double, pair<int, double> > >::iterator tvi_iter = tVectexIntensityList.begin();
+		pair<double, pair<int, double> > tpair = *tvi_iter;			double avg_angle = tpair.first;
+		temp_color = 0.0; temp_count = 0;   double sum_valid_angle = 0.0;
+		for (tvi_iter = tVectexIntensityList.begin(); tvi_iter!=tVectexIntensityList.end(); tvi_iter ++) {
+			tpair = *tvi_iter;
+			temp_color += tpair.second.second; temp_count ++;
+			sum_valid_angle += tpair.first;  
+			avg_angle = sum_valid_angle/temp_count;
+		}
+		vec_z1[vertex_idx] = z1;		vec_z2[vertex_idx] = z2;  //vec_weight[vertex_idx] = vertex_weight;
+		Vertex_Color_List[vertex_idx] = (temp_color/temp_count);
+	}
+	fstream fout; fout.open(vertexintensityfilename, ios::out);
+	if (!fout) {
+		cout << "Can not open " << vertexintensityfilename << " to save data..." << endl;
+	}
+	fout << ObjTriMesh.n_vertices() << endl;
+	for (int i = 0; i < ObjTriMesh.n_vertices(); i ++) {
+		fout << Vertex_Color_List[i] << "  " << Vertex_Color_List[i] << endl;
+	}
+	fout << endl;
+	fout.close();
+	return true;
+}
+
 bool UpdateMeshVertexIntensity(const char* vertexintensityfilename)
 {
 	ObjTriMesh.update_face_normals(); ObjTriMesh.update_vertex_normals();
@@ -1992,16 +2188,15 @@ bool UpdateMeshVertexIntensity(const char* vertexintensityfilename)
 		tVectexIntensityList.clear();
 		int vertex_idx = v_it.handle().idx();
 		for (int i = 0; i < nViews; i ++) {
-			cur_view_direction[0] = listViewPoints[i]->C[0] - ObjTriMesh.point(v_it).data()[0];
-			cur_view_direction[1] = listViewPoints[i]->C[1] - ObjTriMesh.point(v_it).data()[1];
-			cur_view_direction[2] = listViewPoints[i]->C[2] - ObjTriMesh.point(v_it).data()[2];
+			OpenMesh::Vec3f Camera_center(listViewPoints[i]->C[0], listViewPoints[i]->C[1], listViewPoints[i]->C[2]);
+			OpenMesh::Vec3f View_vector = Camera_center - ObjTriMesh.point(v_it);
 			matrixProject(ObjTriMesh.point(v_it).data(), listViewPoints[i]->P,ox,1);
 			if (matrixBound((int)(ox[0]+0.5), 0, listViewPoints[i]->height) && matrixBound((int)(ox[1]+0.5), 0, listViewPoints[i]->width)) {
-				double output_angle = calAngle(ObjTriMesh.normal(v_it).data(), cur_view_direction); //listViewPoints[i]->InverseViewVector
+				double output_angle = calAngle(ObjTriMesh.normal(v_it).data(), View_vector.data()); //listViewPoints[i]->InverseViewVector
 				//cout << "View Vector " << i << ": " << cur_view_direction[0] << "," << cur_view_direction[1] << "," << cur_view_direction[2] << ":";  
 				//cout << "Inner Product : " << dotProduct(ObjTriMesh.normal(v_it).data(), cur_view_direction, 3) << ";";
 				//cout << "Angle:" << output_angle << endl;
-				if(listViewPoints[i]->sil[(int)(ox[0]+0.5)][(int)(ox[1]+0.5)] == true && output_angle<150)
+				if(listViewPoints[i]->sil[(int)(ox[0]+0.5)][(int)(ox[1]+0.5)] == true && OpenMesh::dot(ObjTriMesh.normal(v_it), View_vector)>0)
 				{
 					pair<int, double> tpair = pair<int, double>(i, CV_IMAGE_ELEM(listViewPoints[i]->image, uchar,(int)(ox[0]+0.5),(int)(ox[1]+0.5)));
 					tVectexIntensityList.push_back(make_pair(output_angle, tpair));

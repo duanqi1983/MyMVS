@@ -42,7 +42,7 @@ string psnormalfile;
 string intensityfile;
 bool ScaleDelta = true;
 bool AnisotropicLaplace = true;
-bool RecordColor = true;
+bool RecordColor = false;
 
 Engine *m_ep = NULL;
 
@@ -272,6 +272,13 @@ int main(int argc, char** argv)
 	return 0;
 #endif
 
+	bool ok = OpenMesh::IO::read_mesh(ObjTriMesh, meshfile, read_options);
+	if (!ok) {
+		cout << "Error in load the off model " << meshfile << endl;
+		return false;
+	}
+	cout << "#Vertex: " << ObjTriMesh.n_vertices() << ",  #Edges: " << ObjTriMesh.n_edges() << ",  #Faces: " << ObjTriMesh.n_faces() << endl;
+	CalculateVertexVisibleToViewPoint("VertexVisible.txt");
 	timer_start = (double)cv::getTickCount();
 	TriangularMesh TVTM;
 	TVTM.LoadMeshFile(meshfile.c_str());//bunny2-smooth  pyramid2  Apple
@@ -282,7 +289,7 @@ int main(int argc, char** argv)
 		intensityfile = (MOptions.DirName+"VertexColor"+string(buffer)+".txt");
 		while (!TVTM.LoadPSNormalFile(psnormalfile.c_str()) || !TVTM.LoadVertexColorFile(intensityfile.c_str(), MOptions.varsigma)) {
 			ObjTriMesh = TVTM.m_ObjTriMesh;
-			UpdateMeshVertexIntensity(intensityfile.c_str());
+			UpdateMeshVertexIntensity("VertexVisible.txt", intensityfile.c_str());
 			UpdateVertexPSNormal(psnormalfile.c_str());
 			//CubicSplineFittingPSNormal(iter_step, MOptions.fitting_choice, MOptions.range_value);
 		}
