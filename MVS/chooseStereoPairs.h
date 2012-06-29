@@ -2119,16 +2119,16 @@ bool UpdateMeshVertexIntensity(const char* vertexvisiblefile, const char* vertex
 	}
 	fin.close();
 
-	ObjTriMesh.update_face_normals(); ObjTriMesh.update_vertex_normals();
-	vector<double> vec_z1, vec_z2, vec_weight; int nocolor_point_num = 0;
-	double ox[2], cur_view_direction[3]; int temp_count; double temp_color, nx, ny, nz, z1, z2, vertex_weight;
+	ObjTriMesh.update_face_normals(); ObjTriMesh.update_vertex_normals(); double ox[2];
 	//construct the initial normal/light matrix, to learn their relationship
-	Vertex_Color_List.clear(); Vertex_Color_List.resize(ObjTriMesh.n_vertices());  
-	vec_z1.clear(); vec_z1.resize(ObjTriMesh.n_vertices());	vec_z2.clear(); vec_z2.resize(ObjTriMesh.n_vertices()); 
-	vec_weight.clear(); vec_weight.resize(ObjTriMesh.n_vertices());
-	std::list< pair<double, pair<int, double> > > tVectexIntensityList;
+	fstream fout; fout.open(vertexintensityfilename, ios::out);
+	if (!fout) {
+		cout << "Can not open " << vertexintensityfilename << " to save data..." << endl;
+	}
+	fout << ObjTriMesh.n_vertices() << endl;
+	std::list< pair<double, pair<int, double> > > tVectexIntensityList;   vector<OpenMesh::Vec3f> Camera_center_list;
 	for (MyMesh::VertexIter v_it = ObjTriMesh.vertices_begin();v_it != ObjTriMesh.vertices_end(); ++v_it) {
-		tVectexIntensityList.clear();	int vertex_idx = v_it.handle().idx();
+		tVectexIntensityList.clear();	Camera_center_list.clear();		int vertex_idx = v_it.handle().idx();
 		for (int i = 0; i < vertex_visible_view[vertex_idx].size(); ++ i) {
 			int view_id = vertex_visible_view[vertex_idx][i];
 			OpenMesh::Vec3f Camera_center(listViewPoints[view_id]->C[0], listViewPoints[view_id]->C[1], listViewPoints[view_id]->C[2]);
@@ -2138,55 +2138,34 @@ bool UpdateMeshVertexIntensity(const char* vertexvisiblefile, const char* vertex
 				matrixProject(ObjTriMesh.point(v_it).data(), listViewPoints[view_id]->P,ox,1);
 				pair<int, double> tpair = pair<int, double>(view_id, CV_IMAGE_ELEM(listViewPoints[view_id]->image, uchar,(int)(ox[0]+0.5),(int)(ox[1]+0.5)));
 				tVectexIntensityList.push_back(make_pair(output_angle, tpair));
+				Camera_center_list.push_back(Camera_center);
 			}
 		}
-		if (tVectexIntensityList.size() < 1) {
-			//cout<< "The vertex can not find any visible color." << endl;
-			nocolor_point_num ++;
-			vec_z1[vertex_idx] = z1;		vec_z2[vertex_idx] = z2;
-			Vertex_Color_List[vertex_idx] = -1;
-			continue;
-		}
 		tVectexIntensityList.sort(MyDataSortPredicate);
-		toSpherical(ObjTriMesh.normal(v_it).data()[0], ObjTriMesh.normal(v_it).data()[1], ObjTriMesh.normal(v_it).data()[2], &z1, &z2);
-		std::list< pair<double, pair<int, double> > >::iterator tvi_iter = tVectexIntensityList.begin();
-		pair<double, pair<int, double> > tpair = *tvi_iter;			double avg_angle = tpair.first;
-		temp_color = 0.0; temp_count = 0;   double sum_valid_angle = 0.0;
-		for (tvi_iter = tVectexIntensityList.begin(); tvi_iter!=tVectexIntensityList.end(); tvi_iter ++) {
+		std::list< pair<double, pair<int, double> > >::iterator tvi_iter;  pair<double, pair<int, double> > tpair;
+		fout<<tVectexIntensityList.size()<<" ";  int k = 0;
+		for (tvi_iter = tVectexIntensityList.begin(); tvi_iter!=tVectexIntensityList.end(); tvi_iter ++, k ++) {
 			tpair = *tvi_iter;
-			temp_color += tpair.second.second; temp_count ++;
-			sum_valid_angle += tpair.first;  
-			avg_angle = sum_valid_angle/temp_count;
+			fout<<tpair.second.second<<" "<<Camera_center_list[k].data()[0]<<" "<<Camera_center_list[k].data()[1]<<" "<<Camera_center_list[k].data()[2]<<" ";
 		}
-		vec_z1[vertex_idx] = z1;		vec_z2[vertex_idx] = z2;  //vec_weight[vertex_idx] = vertex_weight;
-		Vertex_Color_List[vertex_idx] = (temp_color/temp_count);
+		fout << endl;
 	}
-	fstream fout; fout.open(vertexintensityfilename, ios::out);
-	if (!fout) {
-		cout << "Can not open " << vertexintensityfilename << " to save data..." << endl;
-	}
-	fout << ObjTriMesh.n_vertices() << endl;
-	for (int i = 0; i < ObjTriMesh.n_vertices(); i ++) {
-		fout << Vertex_Color_List[i] << "  " << Vertex_Color_List[i] << endl;
-	}
-	fout << endl;
 	fout.close();
 	return true;
 }
 
 bool UpdateMeshVertexIntensity(const char* vertexintensityfilename)
 {
-	ObjTriMesh.update_face_normals(); ObjTriMesh.update_vertex_normals();
-	vector<double> vec_z1, vec_z2, vec_weight; int nocolor_point_num = 0;
-	double ox[2], cur_view_direction[3]; int temp_count; double temp_color, nx, ny, nz, z1, z2, vertex_weight;
+	ObjTriMesh.update_face_normals(); ObjTriMesh.update_vertex_normals(); double ox[2];
 	//construct the initial normal/light matrix, to learn their relationship
-	Vertex_Color_List.clear(); Vertex_Color_List.resize(ObjTriMesh.n_vertices());  
-	vec_z1.clear(); vec_z1.resize(ObjTriMesh.n_vertices());	vec_z2.clear(); vec_z2.resize(ObjTriMesh.n_vertices()); 
-	vec_weight.clear(); vec_weight.resize(ObjTriMesh.n_vertices());
-	std::list< pair<double, pair<int, double> > > tVectexIntensityList;
+	fstream fout; fout.open(vertexintensityfilename, ios::out);
+	if (!fout) {
+		cout << "Can not open " << vertexintensityfilename << " to save data..." << endl;
+	}
+	fout << ObjTriMesh.n_vertices() << endl;
+	std::list< pair<double, pair<int, double> > > tVectexIntensityList;		vector<OpenMesh::Vec3f> Camera_center_list;
 	for (MyMesh::VertexIter v_it = ObjTriMesh.vertices_begin();v_it != ObjTriMesh.vertices_end(); ++v_it) {
-		tVectexIntensityList.clear();
-		int vertex_idx = v_it.handle().idx();
+		tVectexIntensityList.clear();	Camera_center_list.clear();		int vertex_idx = v_it.handle().idx();
 		for (int i = 0; i < nViews; i ++) {
 			OpenMesh::Vec3f Camera_center(listViewPoints[i]->C[0], listViewPoints[i]->C[1], listViewPoints[i]->C[2]);
 			OpenMesh::Vec3f View_vector = Camera_center - ObjTriMesh.point(v_it);
@@ -2200,44 +2179,19 @@ bool UpdateMeshVertexIntensity(const char* vertexintensityfilename)
 				{
 					pair<int, double> tpair = pair<int, double>(i, CV_IMAGE_ELEM(listViewPoints[i]->image, uchar,(int)(ox[0]+0.5),(int)(ox[1]+0.5)));
 					tVectexIntensityList.push_back(make_pair(output_angle, tpair));
+					Camera_center_list.push_back(Camera_center);
 				}
 			}
 		}
-		if (tVectexIntensityList.size() < 1) {
-			//cout<< "The vertex can not find any visible color." << endl;
-			nocolor_point_num ++;
-			vec_z1[vertex_idx] = z1;		vec_z2[vertex_idx] = z2;
-			Vertex_Color_List[vertex_idx] = -1;
-			continue;
-		}
 		tVectexIntensityList.sort(MyDataSortPredicate);
-		//vertex color is the average of the first min(tvil.size, 3) records
-		//cout << ObjTriMesh.normal(v_it) << ": " << endl;
-		toSpherical(ObjTriMesh.normal(v_it).data()[0], ObjTriMesh.normal(v_it).data()[1], ObjTriMesh.normal(v_it).data()[2], &z1, &z2);
-		std::list< pair<double, pair<int, double> > >::iterator tvi_iter = tVectexIntensityList.begin();
-		pair<double, pair<int, double> > tpair = *tvi_iter;			double avg_angle = tpair.first;
-		int i = 0; temp_color = 0.0; temp_count = 0;   double sum_valid_angle = 0.0;
-		for (tvi_iter = tVectexIntensityList.begin(); tvi_iter!=tVectexIntensityList.end(); tvi_iter ++) {
+		std::list< pair<double, pair<int, double> > >::iterator tvi_iter;  pair<double, pair<int, double> > tpair;
+		fout<<tVectexIntensityList.size()<<" ";  int k = 0;
+		for (tvi_iter = tVectexIntensityList.begin(); tvi_iter!=tVectexIntensityList.end(); tvi_iter ++, k ++) {
 			tpair = *tvi_iter;
-			if (abs(tpair.first - avg_angle) < 3) {
-				temp_color += tpair.second.second; temp_count ++;
-				sum_valid_angle += tpair.first;  
-				avg_angle = sum_valid_angle/temp_count;
-			} else
-				break;
+			fout<<tpair.second.second<<" "<<Camera_center_list[k].data()[0]<<" "<<Camera_center_list[k].data()[1]<<" "<<Camera_center_list[k].data()[2]<<" ";
 		}
-		vec_z1[vertex_idx] = z1;		vec_z2[vertex_idx] = z2;  //vec_weight[vertex_idx] = vertex_weight;
-		Vertex_Color_List[vertex_idx] = (temp_color/temp_count);
+		fout << endl;
 	}
-	fstream fout; fout.open(vertexintensityfilename, ios::out);
-	if (!fout) {
-		cout << "Can not open " << vertexintensityfilename << " to save data..." << endl;
-	}
-	fout << ObjTriMesh.n_vertices() << endl;
-	for (int i = 0; i < ObjTriMesh.n_vertices(); i ++) {
-		fout << Vertex_Color_List[i] << "  " << Vertex_Color_List[i] << endl;
-	}
-	fout << endl;
 	fout.close();
 	return true;
 }

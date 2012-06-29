@@ -2,6 +2,7 @@
 #define _POINT_H_
 #include <limits>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -42,8 +43,10 @@ public:
 	double ref_x, ref_y, ref_z;
 	double ps_normal_x, ps_normal_y, ps_normal_z;
 	double light_x, light_y, light_z;
+	std::vector<double> intensity_list;
+	std::vector<VECTOR3D> Camera_center_list;
 	double tar_x, tar_y, tar_z;
-	double ps_weight; double ori_intensity, fit_intensity, intensity;
+	double ps_weight; double intensity;
 	double x_divergence, y_divergence, z_divergence;
 	double Voronoi_Area;
 };
