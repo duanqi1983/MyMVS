@@ -2,6 +2,7 @@
 #define _POINT_H_
 #include <limits>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -41,9 +42,11 @@ public:
 	// add by duan qi for alm_mesh_refinement
 	double ref_x, ref_y, ref_z;
 	double ps_normal_x, ps_normal_y, ps_normal_z;
-	double light_x, light_y, light_z;
+	double light_r, light_theta, light_phi; // sphere coordinate, x=r*sin(theta)*cos(phi), y=r*sin(theta)*sin(phi), z = r*cos(phi)
+	std::vector<double> intensity_list;
+	std::vector<VECTOR3D> Camera_center_list;
 	double tar_x, tar_y, tar_z;
-	double ps_weight; double ori_intensity, fit_intensity, intensity;
+	double ps_weight; double intensity;
 	double x_divergence, y_divergence, z_divergence;
 	double Voronoi_Area;
 };
