@@ -201,8 +201,13 @@ int main(int argc, char** argv)
 #ifdef TEST_MESHREFINE
 	// test the ps normal using original vertex normal
 	// Save the output ps normal for vertex;
+<<<<<<< HEAD
 	meshfile = "Models\\Fandisk2-remeshed.off";		MOptions.meshname = "Fandisk2";
 	const char* remeshfile = "Models\\Fandisk2-remeshed.off";
+=======
+	meshfile = "Models\\Fandisk-remeshed.off";		MOptions.meshname = "Fandisk";
+	const char* remeshfile = "Models\\Fandisk-remeshed.off";
+>>>>>>> Sphere-Coordinates-Light
 	int iter_step = 0; sprintf(buffer, "_%.2d", iter_step);
 	psnormalfile = (MOptions.DirName+"VertexPSNormal"+string(buffer)+".txt");
 	intensityfile = (MOptions.DirName+"VertexColor"+string(buffer)+".txt");
@@ -251,6 +256,7 @@ int main(int argc, char** argv)
 	//testTVTM.ALM_TVU_MeshRefinement(MOptions.meshname, 0.0, 0.0, 0.0, 100, MOptions.varsigma, MOptions.penParam, MOptions.regParam, MOptions.lapParam, false, false, 103);
 	//testTVTM.ALM_TVU_MeshRefinement(MOptions.meshname, 0.0, 0.0, 0.0, 0.0, MOptions.varsigma, MOptions.penParam, MOptions.regParam, MOptions.lapParam, true,  false, 104);
 	//testTVTM.ALM_TVU_MeshRefinement(MOptions.meshname, 0.0, 0.0, 0.0, 0.0, MOptions.varsigma, MOptions.penParam, MOptions.regParam, MOptions.lapParam, false, true,  105);
+<<<<<<< HEAD
 	//testTVTM.GradientTesting(0.0001, false, 0);
 	//testTVTM.GradientTesting(0.0001, false, 1);
 	//testTVTM.GradientTesting(0.0001, false, 2);
@@ -259,6 +265,18 @@ int main(int argc, char** argv)
 	//testTVTM.GradientTesting(0.0001, true, 0);
 	//testTVTM.GradientTesting(0.0001, true, 1);
 	testTVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.fidParam, MOptions.pld_eta, MOptions.pcd_eta, MOptions.fcd_eta, MOptions.pnd_eta, MOptions.fnd_eta, MOptions.varsigma, MOptions.pc_eta, MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, iter_step, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
+=======
+	testTVTM.GradientTesting(0.0001, false, 1);
+	testTVTM.GradientTesting(0.0001, false, 2);
+	testTVTM.GradientTesting(0.0001, false, 3);
+	testTVTM.GradientTesting(0.0001, false, 4);
+	testTVTM.GradientTesting(0.0001, false, 5);
+	testTVTM.GradientTesting(0.0001, false, 6);
+	testTVTM.GradientTesting(0.0001, false, 7);
+	testTVTM.GradientTesting(0.0001, false, 8);
+	testTVTM.GradientTesting(0.0001, true, 0);
+	testTVTM.GradientTesting(0.0001, true, 1);
+>>>>>>> Sphere-Coordinates-Light
 	//ReleaseResources();
 	engClose(m_ep);
 	return 0;
@@ -269,7 +287,11 @@ int main(int argc, char** argv)
 	const char* remeshfile = "Models\\Fandisk2-remeshed.off";
 	TriangularMesh testTVTM;int iter_step = 0;
 	testTVTM.LoadMeshFile(meshfile.c_str());
+<<<<<<< HEAD
 	testTVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.fidParam, MOptions.pld_eta, MOptions.pcd_eta, MOptions.fcd_eta, MOptions.pnd_eta, MOptions.fnd_eta, MOptions.varsigma, MOptions.pc_eta, MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, iter_step, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
+=======
+	testTVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.PosfidParam, MOptions.LitfidParam, MOptions.pld_eta, MOptions.pcd_eta, MOptions.fcd_eta, MOptions.pnd_eta, MOptions.fnd_eta, MOptions.varsigma, MOptions.pc_eta, MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, iter_step, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
+>>>>>>> Sphere-Coordinates-Light
 	engClose(m_ep);
 	return 0;
 #endif
@@ -294,7 +316,7 @@ int main(int argc, char** argv)
 			UpdateVertexPSNormal(psnormalfile.c_str());
 			//CubicSplineFittingPSNormal(iter_step, MOptions.fitting_choice, MOptions.range_value);
 		}
-		TVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.fidParam, MOptions.pld_eta, MOptions.pcd_eta, MOptions.fcd_eta, MOptions.pnd_eta, MOptions.fnd_eta, MOptions.varsigma, MOptions.pc_eta, MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, iter_step, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
+		TVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.PosfidParam, MOptions.LitfidParam, MOptions.pld_eta, MOptions.pcd_eta, MOptions.fcd_eta, MOptions.pnd_eta, MOptions.fnd_eta, MOptions.varsigma, MOptions.pc_eta, MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, iter_step, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
 	}
 	
 	printf("\nALM operation time = %lfs\n",((double)cv::getTickCount()-timer_start)/cv::getTickFrequency());

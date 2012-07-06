@@ -2141,10 +2141,24 @@ bool UpdateMeshVertexIntensity(const char* vertexvisiblefile, const char* vertex
 				Camera_center_list.push_back(Camera_center);
 			}
 		}
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+		tVectexIntensityList.sort(MyDataSortPredicate); int vi_size = tVectexIntensityList.size();
+		std::list< pair<double, pair<int, double> > >::iterator tvi_iter = tVectexIntensityList.begin();  
+		pair<double, pair<int, double> > tpair;  int tsize = min(vi_size, 20);
+		fout<<tsize<<" ";
+		for (int k = 0; k < tsize; tvi_iter ++, k ++) {
+=======
+>>>>>>> Sphere-Coordinates-Light
 		tVectexIntensityList.sort(MyDataSortPredicate);
 		std::list< pair<double, pair<int, double> > >::iterator tvi_iter;  pair<double, pair<int, double> > tpair;
 		fout<<tVectexIntensityList.size()<<" ";  int k = 0;
 		for (tvi_iter = tVectexIntensityList.begin(); tvi_iter!=tVectexIntensityList.end(); tvi_iter ++, k ++) {
+<<<<<<< HEAD
+=======
+>>>>>>> origin/master
+>>>>>>> Sphere-Coordinates-Light
 			tpair = *tvi_iter;
 			fout<<tpair.second.second<<" "<<Camera_center_list[k].data()[0]<<" "<<Camera_center_list[k].data()[1]<<" "<<Camera_center_list[k].data()[2]<<" ";
 		}
@@ -2183,10 +2197,24 @@ bool UpdateMeshVertexIntensity(const char* vertexintensityfilename)
 				}
 			}
 		}
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+		tVectexIntensityList.sort(MyDataSortPredicate); int vi_size = tVectexIntensityList.size();
+		std::list< pair<double, pair<int, double> > >::iterator tvi_iter = tVectexIntensityList.begin();  
+		pair<double, pair<int, double> > tpair;  int tsize = min(vi_size, 20);
+		fout<<tsize<<" ";
+		for (int k = 0; k < tsize; tvi_iter ++, k ++) {
+=======
+>>>>>>> Sphere-Coordinates-Light
 		tVectexIntensityList.sort(MyDataSortPredicate);
 		std::list< pair<double, pair<int, double> > >::iterator tvi_iter;  pair<double, pair<int, double> > tpair;
 		fout<<tVectexIntensityList.size()<<" ";  int k = 0;
 		for (tvi_iter = tVectexIntensityList.begin(); tvi_iter!=tVectexIntensityList.end(); tvi_iter ++, k ++) {
+<<<<<<< HEAD
+=======
+>>>>>>> origin/master
+>>>>>>> Sphere-Coordinates-Light
 			tpair = *tvi_iter;
 			fout<<tpair.second.second<<" "<<Camera_center_list[k].data()[0]<<" "<<Camera_center_list[k].data()[1]<<" "<<Camera_center_list[k].data()[2]<<" ";
 		}

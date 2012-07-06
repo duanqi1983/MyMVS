@@ -40,9 +40,13 @@ public:
 	POINT3D & operator/=(const DP c);
 
 	// add by duan qi for alm_mesh_refinement
-	double ref_x, ref_y, ref_z;
+	double ref_x, ref_y, ref_z, ref_light_x, ref_light_y, ref_light_z;
 	double ps_normal_x, ps_normal_y, ps_normal_z;
+<<<<<<< HEAD
 	double light_r, light_theta, light_phi; // sphere coordinate, x=r*sin(theta)*cos(phi), y=r*sin(theta)*sin(phi), z = r*cos(phi)
+=======
+	double light_x, light_y, light_z;
+>>>>>>> Sphere-Coordinates-Light
 	std::vector<double> intensity_list;
 	std::vector<VECTOR3D> Camera_center_list;
 	double tar_x, tar_y, tar_z;
