@@ -7960,7 +7960,11 @@ bool TriangularMesh::LoadVertexColorFile(const char* filename, double m_sigma)
 	MyMesh org_mesh = this->m_ObjTriMesh; 	org_mesh.request_vertex_colors();
 	double tintensity, tcx, tcy, tcz; VECTOR3D camra_center;
 	for (int i = 0; i < m_vnum; i ++) {
+<<<<<<< HEAD
 		fin >> c_size; m_vertices[i].intensity_list.clear(); m_vertices[i].Camera_center_list.clear(); m_vertices[i].intensity = 0;
+=======
+		fin >> c_size; m_vertices[i].intensity_list.clear(); m_vertices[i].Camera_center_list.clear(); m_vertices[i].intensity = -1;
+>>>>>>> origin/master
 		for (int k = 0; k < c_size; ++ k) {
 			fin >> tintensity >> camra_center.x >> camra_center.y >> camra_center.z;
 			m_vertices[i].intensity_list.push_back(tintensity);
@@ -7968,10 +7972,16 @@ bool TriangularMesh::LoadVertexColorFile(const char* filename, double m_sigma)
 			m_vertices[i].Camera_center_list.push_back(camra_center);
 		}
 		if (c_size > 0) {
+<<<<<<< HEAD
 			m_vertices[i].intensity = (m_vertices[i].intensity)/(c_size+0.000001);
 		}
 		org_mesh.set_color(MyMesh::VertexHandle(i), MyMesh::Color(m_vertices[i].intensity,m_vertices[i].intensity,m_vertices[i].intensity));
 		this->m_ObjTriMesh.set_color(MyMesh::VertexHandle(i), MyMesh::Color(m_vertices[i].intensity,m_vertices[i].intensity,m_vertices[i].intensity));
+=======
+			m_vertices[i].intensity = (m_vertices[i].intensity+1)/c_size;
+		}
+		org_mesh.set_color(MyMesh::VertexHandle(i), MyMesh::Color(m_vertices[i].intensity,m_vertices[i].intensity,m_vertices[i].intensity));
+>>>>>>> origin/master
 	}
 	fin.close();
 	cout << "Load color file: " << filename << " Done..." << endl;
@@ -9316,11 +9326,16 @@ void TriangularMesh::TV_JacobianMatrix_Construction(MyMesh& T_Mesh, RowSparseMat
 		for (MyMesh::EdgeIter e_it = T_Mesh.edges_begin(); e_it != T_Mesh.edges_end(); ++ e_it) {
 			int iid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,0)).idx();
 			int jid = T_Mesh.to_vertex_handle(T_Mesh.halfedge_handle(e_it,1)).idx(); 
+<<<<<<< HEAD
 			if (m_vertices[iid].intensity < 0.00001 || m_vertices[jid].intensity < 0.00001) {
 				continue;
 			}
 			double omegaij = std::exp(-pow((m_vertices[iid].intensity - m_vertices[jid].intensity), 2.0)/varsigma);
 			omegaij = (omegaij-min_omega)/(max_omega-min_omega);
+=======
+			double omegaij = std::exp(-pow((m_vertices[iid].intensity - m_vertices[jid].intensity), 2.0)/varsigma);
+			//omegaij = (omegaij-min_omega)/(max_omega-min_omega);
+>>>>>>> origin/master
 #ifdef TEST_MESHREFINE
 			OpenMesh::Vec3f psni(m_vertices[iid].ps_normal_x,m_vertices[iid].ps_normal_y,m_vertices[iid].ps_normal_z);
 			OpenMesh::Vec3f psnj(m_vertices[jid].ps_normal_x,m_vertices[jid].ps_normal_y,m_vertices[jid].ps_normal_z);
