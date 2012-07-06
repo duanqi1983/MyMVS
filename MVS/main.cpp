@@ -201,17 +201,15 @@ int main(int argc, char** argv)
 #ifdef TEST_MESHREFINE
 	// test the ps normal using original vertex normal
 	// Save the output ps normal for vertex;
-	meshfile = "Models\\torus-smooth.off";		MOptions.meshname = "torus";
-	const char* remeshfile = "Models\\torus-remeshed.off";
+	meshfile = "Models\\Fandisk-remeshed.off";		MOptions.meshname = "Fandisk";
+	const char* remeshfile = "Models\\Fandisk-remeshed.off";
 	int iter_step = 0; sprintf(buffer, "_%.2d", iter_step);
 	psnormalfile = (MOptions.DirName+"VertexPSNormal"+string(buffer)+".txt");
 	intensityfile = (MOptions.DirName+"VertexColor"+string(buffer)+".txt");
-	bool ok = OpenMesh::IO::read_mesh(ObjTriMesh, remeshfile, read_options);//bunny2-remeshed   pyramid2    Fandisk  torus  Fandisk2
+	bool tok = OpenMesh::IO::read_mesh(ObjTriMesh, remeshfile, read_options);//bunny2-remeshed   pyramid2    Fandisk  torus  Fandisk2
 	cout << "#Vertex: " << ObjTriMesh.n_vertices() << ",  #Edges: " << ObjTriMesh.n_edges() << ",  #Faces: " << ObjTriMesh.n_faces() << endl;
-	ObjTriMesh.request_face_normals();
-	ObjTriMesh.update_face_normals();
-	ObjTriMesh.request_vertex_normals();
-	ObjTriMesh.update_vertex_normals();
+	ObjTriMesh.request_face_normals();		ObjTriMesh.update_face_normals();
+	ObjTriMesh.request_vertex_normals();	ObjTriMesh.update_vertex_normals();
 	fstream	fout(psnormalfile, ios::out);
 	if (!fout) {
 		cout << "Can not open " << psnormalfile << " to save data..." << endl; 
@@ -244,12 +242,6 @@ int main(int argc, char** argv)
 	fout.close();
 	TriangularMesh testTVTM;
 	testTVTM.LoadMeshFile(meshfile.c_str());
-	if (!testTVTM.LoadPSNormalFile(psnormalfile.c_str()) || !testTVTM.LoadVertexColorFile(intensityfile.c_str(), MOptions.varsigma)) {
-		OpenMesh::IO::read_mesh(ObjTriMesh, meshfile, read_options);
-		CubicSplineFittingPSNormal(iter_step, MOptions.fitting_choice, MOptions.range_value);
-		testTVTM.LoadPSNormalFile(psnormalfile.c_str());
-		testTVTM.LoadVertexColorFile(intensityfile.c_str(), MOptions.varsigma);
-	}
 	//testTVTM.GradientTesting(0.0001, false, 0);
 	//testTVTM.LM_Testing(false, 0);
 	//testTVTM.LM_Testing(false, 2);
@@ -259,15 +251,27 @@ int main(int argc, char** argv)
 	//testTVTM.ALM_TVU_MeshRefinement(MOptions.meshname, 0.0, 0.0, 0.0, 100, MOptions.varsigma, MOptions.penParam, MOptions.regParam, MOptions.lapParam, false, false, 103);
 	//testTVTM.ALM_TVU_MeshRefinement(MOptions.meshname, 0.0, 0.0, 0.0, 0.0, MOptions.varsigma, MOptions.penParam, MOptions.regParam, MOptions.lapParam, true,  false, 104);
 	//testTVTM.ALM_TVU_MeshRefinement(MOptions.meshname, 0.0, 0.0, 0.0, 0.0, MOptions.varsigma, MOptions.penParam, MOptions.regParam, MOptions.lapParam, false, true,  105);
-	testTVTM.GradientTesting(0.0001, false, 0);
 	testTVTM.GradientTesting(0.0001, false, 1);
 	testTVTM.GradientTesting(0.0001, false, 2);
-	//testTVTM.GradientTesting(0.0001, false, 2);
-	//testTVTM.GradientTesting(0.0001, false, 3);
-	//testTVTM.GradientTesting(0.0001, true, 0);
-	//testTVTM.GradientTesting(0.0001, true, 1);
-	testTVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.fidParam, MOptions.pld_eta, MOptions.pcd_eta, MOptions.fcd_eta, MOptions.pnd_eta, MOptions.fnd_eta, MOptions.varsigma, MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, 200, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
+	testTVTM.GradientTesting(0.0001, false, 3);
+	testTVTM.GradientTesting(0.0001, false, 4);
+	testTVTM.GradientTesting(0.0001, false, 5);
+	testTVTM.GradientTesting(0.0001, false, 6);
+	testTVTM.GradientTesting(0.0001, false, 7);
+	testTVTM.GradientTesting(0.0001, false, 8);
+	testTVTM.GradientTesting(0.0001, true, 0);
+	testTVTM.GradientTesting(0.0001, true, 1);
 	//ReleaseResources();
+	engClose(m_ep);
+	return 0;
+#endif
+
+#ifdef TVNSMOOTH
+	meshfile = "Models\\Fandisk2-remeshed.off";		MOptions.meshname = "Fandisk2";
+	const char* remeshfile = "Models\\Fandisk2-remeshed.off";
+	TriangularMesh testTVTM;int iter_step = 0;
+	testTVTM.LoadMeshFile(meshfile.c_str());
+	testTVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.PosfidParam, MOptions.LitfidParam, MOptions.pld_eta, MOptions.pcd_eta, MOptions.fcd_eta, MOptions.pnd_eta, MOptions.fnd_eta, MOptions.varsigma, MOptions.pc_eta, MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, iter_step, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
 	engClose(m_ep);
 	return 0;
 #endif
@@ -277,7 +281,6 @@ int main(int argc, char** argv)
 		cout << "Error in load the off model " << meshfile << endl;
 		return false;
 	}
-	cout << "#Vertex: " << ObjTriMesh.n_vertices() << ",  #Edges: " << ObjTriMesh.n_edges() << ",  #Faces: " << ObjTriMesh.n_faces() << endl;
 	CalculateVertexVisibleToViewPoint("VertexVisible.txt");
 	timer_start = (double)cv::getTickCount();
 	TriangularMesh TVTM;
@@ -293,7 +296,7 @@ int main(int argc, char** argv)
 			UpdateVertexPSNormal(psnormalfile.c_str());
 			//CubicSplineFittingPSNormal(iter_step, MOptions.fitting_choice, MOptions.range_value);
 		}
-		TVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.fidParam, MOptions.pld_eta, MOptions.pcd_eta, MOptions.fcd_eta, MOptions.pnd_eta, MOptions.fnd_eta, MOptions.varsigma, MOptions.pc_eta, MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, iter_step, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
+		TVTM.ALM_TVU_MeshRefinement(MOptions.meshname, MOptions.PosfidParam, MOptions.LitfidParam, MOptions.pld_eta, MOptions.pcd_eta, MOptions.fcd_eta, MOptions.pnd_eta, MOptions.fnd_eta, MOptions.varsigma, MOptions.pc_eta, MOptions.penParam, MOptions.regParam, MOptions.lapParam, MOptions.ALM_TVU, MOptions.ALM_TVNorm, iter_step, MOptions.UseFaceArea, MOptions.UseMatlabSolver);
 	}
 	
 	printf("\nALM operation time = %lfs\n",((double)cv::getTickCount()-timer_start)/cv::getTickFrequency());

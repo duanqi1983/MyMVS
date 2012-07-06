@@ -73,7 +73,8 @@ public:
 		range_value			= 0.5;
 		fitting_choice		= 0;
 
-		fidParam			= 0;
+		PosfidParam			= 0;
+		LitfidParam			= 0;
 		pld_eta				= 0;
 		pcd_eta				= 0;
 		fcd_eta				= 0;
@@ -86,6 +87,7 @@ public:
 		regParam			= 1.0;
 		pc_eta				= 0.0;
 		lapParam			= 0;
+		lfParam				= 10;
 
 		Is_Matched			= true;
 		Is_Bundler			= true;
@@ -95,7 +97,7 @@ public:
 		UseFaceArea			= false;
 
 		UseFittedColor		= false;
-		UseMatlabSolver		= false;
+		UseMatlabSolver		= true;
 		ScaleDelta			= true;
 		AnisotropicLaplace	= true;
 		RecordColor			= false;
@@ -167,9 +169,13 @@ public:
 					ifstr >> fitting_choice;
 			}
 
-			if (name.substr(name.find_last_of("-")+1) == "FID" ||
-				name.substr(name.find_last_of("-")+1) == "fid") {
-					ifstr >> fidParam;
+			if (name.substr(name.find_last_of("-")+1) == "PFID" ||
+				name.substr(name.find_last_of("-")+1) == "pfid") {
+					ifstr >> PosfidParam;
+			}
+			if (name.substr(name.find_last_of("-")+1) == "LFID" ||
+				name.substr(name.find_last_of("-")+1) == "lfid") {
+					ifstr >> LitfidParam;
 			}
 			if (name.substr(name.find_last_of("-")+1) == "PLD" ||
 				name.substr(name.find_last_of("-")+1) == "pld") {
@@ -240,6 +246,10 @@ public:
 				name.substr(name.find_last_of("-")+1) == "reo") {
 					int temp; ifstr >> temp; RecordColor = temp>0 ? true:false; 
 			}
+			if (name.substr(name.find_last_of("-")+1) == "LFP" ||
+				name.substr(name.find_last_of("-")+1) == "lfp") {
+					ifstr >> lfParam;  
+			}
 		}
 		ifstr.close();
 		return true;
@@ -261,7 +271,8 @@ public:
 	int		fitting_choice;
 	string	meshname;
 
-	double	fidParam;
+	double	PosfidParam;
+	double	LitfidParam;
 	double	pld_eta;
 	double	pcd_eta;
 	double	fcd_eta;
@@ -274,6 +285,7 @@ public:
 	double	regParam;
 	double	pc_eta;
 	double  lapParam;
+	double	lfParam;
 
 	bool	Is_Matched;
 	bool	Is_Bundler;
@@ -397,8 +409,11 @@ void ParseParam(int argc, char* argv[], ModelingOptions &options)
 			options.fitting_choice	= atoi(param.c_str());	i++;
 		}
 
-		if (opt == "FID" || opt == "fid") {
-			options.fidParam	= atof(param.c_str());	i++;
+		if (opt == "PFID" || opt == "pfid") {
+			options.PosfidParam	= atof(param.c_str());	i++;
+		}
+		if (opt == "LFID" || opt == "lfid") {
+			options.LitfidParam	= atof(param.c_str());	i++;
 		}
 		if (opt == "PLD" || opt == "pld") {
 			options.pld_eta	= atof(param.c_str());	i++;
@@ -434,6 +449,9 @@ void ParseParam(int argc, char* argv[], ModelingOptions &options)
 		}
 		if (opt == "LAP" || opt == "lap") {
 			options.lapParam	= atof(param.c_str());	i++;
+		}
+		if (opt == "LFP" || opt == "lfp") {
+			options.lfParam		= atof(param.c_str());	i++;
 		}
 		if (opt == "FA" || opt == "fa") {
 			int temp = atoi(param.c_str());
@@ -555,7 +573,6 @@ bool FileExisted(const char* name)
 {
 	FILE * myfile;
 	myfile = fopen (name,"r");
-
 	if (myfile == NULL) 
 	{
 		//cout << name << " is not existed...." << endl;
